@@ -5,6 +5,7 @@ We are *Team 9*.
 Authors:
 Joël Rodenbach - @FunMetJoel
 Samu Németh - @samunemeth
+Can Erturk - @ErturkCan
 
 *Please add yourself here to the list.*
 
