@@ -8,6 +8,8 @@ Joël Rodenbach - @FunMetJoel
 
 Samu Németh - @samunemeth
 
+Ignacy Świderski - @igifigi
+
 Can Erturk - @ErturkCan
 
 
