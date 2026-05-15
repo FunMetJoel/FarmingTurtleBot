@@ -4,13 +4,10 @@ We are *Team 9*.
 
 Authors:
 
-Joël Rodenbach - @FunMetJoel
-
-Samu Németh - @samunemeth
-
-Ignacy Świderski - @igifigi
-
-Can Erturk - @ErturkCan
+Joël Rodenbach - @FunMetJoel  
+Samu Németh - @samunemeth  
+Ignacy Świderski - @igifigi  
+Can Erturk - @ErturkCan  
 
 
 *Please add yourself here to the list.*
