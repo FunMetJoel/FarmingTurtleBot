@@ -24,7 +24,8 @@ setup(
     },
     entry_points={
         'console_scripts': [
-            'randomHumiditySensor = tb3_field_dt.RandomHumiditySensorNode:main'
+            'randomHumiditySensor = tb3_field_dt.RandomHumiditySensorNode:main',
+            'humidityMap = tb3_field_dt.HumidityMapNode:main'
         ],
     },
 )
