@@ -1,7 +1,7 @@
 import rclpy
 from rclpy.node import Node
 from nav_msgs.msg import OccupancyGrid
-from geometry_msgs.msg import Pose, Point, Quaternion
+from geometry_msgs.msg import Pose, Point, Quaternion, Vector3
 from random import Random
 from .DynamicMap import DynamicMap
 import numpy as np
@@ -12,6 +12,13 @@ class HumidityMapNode(Node):
         super().__init__('HumidityMapper')
 
         self.publisher_ = self.create_publisher(OccupancyGrid, "/humidityMap", 10)
+
+        self.subscription_ = self.create_subscription(
+            Vector3,
+            '/manualHumidMapUpdate',
+            self.scan_callback,
+            10
+        )
 
         self.timer_ = self.create_timer(1, self.publish_humidity_map)
 
@@ -28,11 +35,11 @@ class HumidityMapNode(Node):
         data.header.stamp = self.get_clock().now().to_msg()
 
         data.info.resolution = self.map.resolution
-        data.info.width = self.map.size[0]
-        data.info.height = self.map.size[1]
+        data.info.width = self.map.sizeX
+        data.info.height = self.map.sizeY
 
         origin = Pose()
-        origin.position = Point(x=self.map.origin[0], y=self.map.origin[1], z=0.0)
+        origin.position = Point(x=self.map.originX, y=self.map.originY, z=0.0)
         origin.orientation = Quaternion(x=0.0, y=0.0, z=0.0, w=1.0)
         data.info.origin = origin
 
@@ -43,13 +50,19 @@ class HumidityMapNode(Node):
             "Published"
         )
 
+    def scan_callback(self, msg:Vector3):
+        self.map.setPixelAtLocation(msg.x, msg.y, msg.z)
+ 
+        self.get_logger().info(
+            f'Update recieved: {msg.x}, {msg.y}, {msg.z}'
+        )
 
 def main(args=None):
     rclpy.init(args=args)
     node = HumidityMapNode()
     rclpy.spin(node)
     node.destroy_node()
-    rclpy.shutdown90
+    rclpy.shutdown()
 
 
 if __name__ == '__main__':
