@@ -2,9 +2,7 @@ import rclpy
 from rclpy.node import Node
 from nav_msgs.msg import OccupancyGrid
 from geometry_msgs.msg import Pose, Point, Quaternion, Vector3
-from random import Random
 from .DynamicMap import DynamicMap
-import numpy as np
 
 class HumidityMapNode(Node):
 
@@ -15,7 +13,7 @@ class HumidityMapNode(Node):
 
         self.subscription_ = self.create_subscription(
             Vector3,
-            '/manualHumidMapUpdate',
+            '/locatedHumidityData',
             self.scan_callback,
             10
         )

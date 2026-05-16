@@ -18,7 +18,7 @@ class RandomHumiditySensorNode(Node):
 
     def publish_humidity(self):
         data = Float64()
-        data.data = random.Random().random()
+        data.data = random.Random().random() * 10
         self.publisher_.publish(data)
 
 
