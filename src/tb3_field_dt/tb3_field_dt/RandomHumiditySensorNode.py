@@ -27,7 +27,7 @@ def main(args=None):
     node = RandomHumiditySensorNode()
     rclpy.spin(node)
     node.destroy_node()
-    rclpy.shutdown90
+    rclpy.shutdown()
 
 
 if __name__ == '__main__':
