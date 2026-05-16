@@ -3,6 +3,7 @@ from rclpy.node import Node
 from nav_msgs.msg import OccupancyGrid
 from geometry_msgs.msg import Pose, Point, Quaternion
 from random import Random
+from .DynamicMap import DynamicMap
 import numpy as np
 
 class HumidityMapNode(Node):
@@ -18,25 +19,25 @@ class HumidityMapNode(Node):
             "HumidityMap node started, publishing to /humidityMap(OccupancyGrid)"
         )
 
+        self.map = DynamicMap(0.1)
+
     def publish_humidity_map(self):
-        width = Random().randint(1, 100)
-        height = Random().randint(1, 100)
+        
         data = OccupancyGrid()
         data.header.frame_id = 'map'
         data.header.stamp = self.get_clock().now().to_msg()
 
-        data.info.resolution = 0.1
-        data.info.width = width#100
-        data.info.height = height#100
+        data.info.resolution = self.map.resolution
+        data.info.width = self.map.size[0]
+        data.info.height = self.map.size[1]
 
         origin = Pose()
-        origin.position = Point(x=0.0, y=0.0, z=0.0)
+        origin.position = Point(x=self.map.origin[0], y=self.map.origin[1], z=0.0)
         origin.orientation = Quaternion(x=0.0, y=0.0, z=0.0, w=1.0)
         data.info.origin = origin
 
-        mapData = np.random.randint(-1, 100, (data.info.height, data.info.width))#np.full((data.info.height, data.info.width), -1, dtype=np.int8)
+        mapData = self.map.toOccupancyGridData(0.0, 10.0)
         data.data = mapData.flatten().tolist()
-
         self.publisher_.publish(data)
         self.get_logger().info(
             "Published"

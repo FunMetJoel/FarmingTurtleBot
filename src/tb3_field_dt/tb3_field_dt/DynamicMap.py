@@ -10,7 +10,7 @@ class DynamicMap():
         self.resolution:float = resolution
         self.origin = origin
         self.size = startSize
-        self.array:np._ArrayFloat_co = np.full(startSize, np.nan, dtype=np.int8)
+        self.array:np._ArrayFloat_co = np.full(startSize, np.nan, dtype=np.float64)
     
     def setPixelAtLocation(self, worldX:float, worldY:float, value:float):
         pX, pY = self.worldToPixelCords(worldX, worldY)
@@ -47,5 +47,15 @@ class DynamicMap():
         pixelX:int = round((x - self.origin[0]) / self.resolution)
         pixelY:int = round((y - self.origin[1]) / self.resolution)
         return pixelX, pixelY
+    
+    def toOccupancyGridData(self, min:float, max:float):
+        occupancyGridData = np.empty(self.size, dtype=np.int8) # Array with values between -1 and 100
+       
+        scale:float = max - min
+        occupancyGridData = ((self.array - min) * (100.0 / scale)).clip(0, 100).round().astype(int)
+    
+        occupancyGridData[np.isnan(self.array)] = -1
+
+        return occupancyGridData
 
 
