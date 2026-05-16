@@ -27,27 +27,35 @@ class DynamicMap():
     def __expandToInclude(self, x:int, y:int):
         oldPixelOriginX = 0
         oldPixelOriginY = 0
-        if (self.sizeX < x):
+        print("pos", x, y)
+        print("size", self.sizeX, self.sizeY)
+        if (self.sizeX <= x):
             self.sizeX = x + 1
         elif (x < 0):
             self.originX = float(x) * self.resolution + self.originX
             self.sizeX = self.sizeX - x
             oldPixelOriginX = -x
 
-        if (self.sizeY < y):
+        if (self.sizeY <= y):
             self.sizeY = y + 1
         elif (y < 0):
             self.originY = float(y) * self.resolution + self.originY
             self.sizeY = self.sizeY - y
             oldPixelOriginY = -y
 
+        print("OldOrigin", oldPixelOriginX, oldPixelOriginY)
+        print("size", self.sizeX, self.sizeY)
+
         oldMap = self.array.copy()
+        print(oldMap)
         self.array = np.full((self.sizeY, self.sizeX), np.nan, dtype=np.float64)
-        self.array[oldPixelOriginX:oldPixelOriginX + oldMap.shape[0], oldPixelOriginY:oldPixelOriginY + oldMap.shape[1]] = oldMap
-        
+        print(self.array)
+        print(oldPixelOriginX, oldPixelOriginX + oldMap.shape[1], oldPixelOriginY, oldPixelOriginY + oldMap.shape[0])
+        self.array[oldPixelOriginY:oldPixelOriginY + oldMap.shape[0], oldPixelOriginX:oldPixelOriginX + oldMap.shape[1]] = oldMap
+        print(self.array)
 
     def __inBounds(self, x:int, y:int) -> bool:
-        return (self.sizeX > x) and (0 < x) and (self.sizeY > y) and (0 < y)
+        return (self.sizeX > x) and (0 <= x) and (self.sizeY > y) and (0 <= y)
     
     def pixelToWorldCords(self, x:int, y:int) -> tuple[float, float]: 
         worldX:float = (float(x) * self.resolution) + self.originX
