@@ -6,6 +6,8 @@ from tf2_msgs.msg import TFMessage
 from tf2_ros import TransformException
 from tf2_ros.buffer import Buffer
 from tf2_ros.transform_listener import TransformListener
+from rclpy.qos import QoSProfile, ReliabilityPolicy, HistoryPolicy
+
 
 class HumiditySensorInterpreterNode(Node):
 
@@ -14,11 +16,16 @@ class HumiditySensorInterpreterNode(Node):
 
         self.publisher_ = self.create_publisher(Vector3, '/locatedHumidityData', 10)
 
+        qos_profile = QoSProfile(
+            reliability=ReliabilityPolicy.BEST_EFFORT,
+            history=HistoryPolicy.KEEP_LAST,
+            depth=1
+        )
         self.subscription_humidity = self.create_subscription(
             Float64,
             '/humidity',
             self.publish_humidity,
-            10
+            qos_profile
         )
         
         self.currentLocation: Transform = None
