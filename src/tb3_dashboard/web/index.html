@@ -1,0 +1,768 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <title>DNSBot dashboard</title>
+        <style>
+            :root {
+                --bg: #0d1117;
+                --surface: #161b22;
+                --border: #30363d;
+                --text: #c9d1d9;
+                --muted: #8b949e;
+                --accent: #58a6ff;
+                --green: #3fb950;
+                --red: #f85149;
+                --yellow: #d29922;
+                --orange: #e3b341;
+            }
+
+            * {
+                box-sizing: border-box;
+                margin: 0;
+                padding: 0;
+            }
+
+            body {
+                background: var(--bg);
+                color: var(--text);
+                font-family: "Segoe UI", system-ui, sans-serif;
+                font-size: 14px;
+                height: 100vh;
+                overflow: hidden;
+                display: grid;
+                grid-template-rows: 46px 1fr 190px;
+                grid-template-columns: 1fr 300px;
+                gap: 1px;
+                background-color: var(--border);
+            }
+
+            header {
+                grid-column: 1 / -1;
+                background: var(--surface);
+                display: flex;
+                align-items: center;
+                padding: 0 16px;
+                gap: 12px;
+            }
+
+            .logo {
+                font-size: 15px;
+                font-weight: 700;
+                letter-spacing: 0.5px;
+            }
+
+            .status-pill {
+                display: flex;
+                align-items: center;
+                gap: 6px;
+                padding: 3px 10px;
+                border-radius: 12px;
+                background: var(--bg);
+                border: 1px solid var(--border);
+                font-size: 12px;
+                color: var(--muted);
+            }
+            .status-dot {
+                width: 8px;
+                height: 8px;
+                border-radius: 50%;
+                background: var(--muted);
+                transition: background 0.4s;
+            }
+            .status-dot.connected {
+                background: var(--green);
+                box-shadow: 0 0 6px var(--green);
+            }
+            .status-dot.error {
+                background: var(--red);
+            }
+            .status-dot.disconnected {
+                background: var(--muted);
+            }
+
+            /* ── Map ──────────────────────────────────────────────── */
+            .map-section {
+                background: #0a0e14;
+                position: relative;
+                overflow: hidden;
+            }
+
+            #mapCanvas {
+                display: block;
+                width: 100%;
+                height: 100%;
+                image-rendering: pixelated;
+            }
+
+            .map-legend {
+                position: absolute;
+                bottom: 10px;
+                left: 10px;
+                background: rgba(13, 17, 23, 0.88);
+                border: 1px solid var(--border);
+                border-radius: 5px;
+                padding: 7px 10px;
+                font-size: 11px;
+                color: var(--muted);
+                display: flex;
+                flex-direction: column;
+                gap: 4px;
+            }
+            .legend-row {
+                display: flex;
+                align-items: center;
+                gap: 7px;
+            }
+            .legend-swatch {
+                width: 12px;
+                height: 12px;
+                border-radius: 2px;
+                flex-shrink: 0;
+            }
+
+            /* ── Right sidebar ────────────────────────────────────── */
+            .sidebar {
+                background: var(--surface);
+                padding: 10px;
+                display: flex;
+                flex-direction: column;
+                gap: 8px;
+                overflow-y: auto;
+            }
+
+            .card {
+                background: var(--bg);
+                border: 1px solid var(--border);
+                border-radius: 6px;
+                padding: 9px 11px;
+            }
+            .card-label {
+                font-size: 10px;
+                text-transform: uppercase;
+                letter-spacing: 0.6px;
+                color: var(--muted);
+                margin-bottom: 5px;
+            }
+            .card-value {
+                font-size: 22px;
+                font-weight: 700;
+            }
+            .card-unit {
+                font-size: 12px;
+                font-weight: 400;
+                color: var(--muted);
+            }
+
+            .bar-track {
+                height: 5px;
+                background: var(--border);
+                border-radius: 3px;
+                margin-top: 6px;
+                overflow: hidden;
+            }
+            .bar-fill {
+                height: 100%;
+                border-radius: 3px;
+                transition:
+                    width 0.6s ease,
+                    background 0.4s;
+            }
+
+            .weather-row {
+                display: flex;
+                align-items: center;
+                gap: 10px;
+            }
+            .weather-icon {
+                font-size: 26px;
+                line-height: 1;
+            }
+            .weather-label {
+                font-size: 10px;
+                color: var(--muted);
+            }
+            .weather-val {
+                font-size: 14px;
+                font-weight: 600;
+            }
+
+            .water-big {
+                font-size: 34px;
+                font-weight: 700;
+                color: var(--green);
+                line-height: 1;
+            }
+            .water-sub {
+                font-size: 10px;
+                color: var(--muted);
+                margin-top: 3px;
+            }
+            .water-row {
+                display: flex;
+                gap: 14px;
+                margin-top: 7px;
+                font-size: 12px;
+            }
+            .dt-color {
+                color: var(--accent);
+            }
+            .naive-color {
+                color: var(--orange);
+            }
+
+            /* ── Bottom row ───────────────────────────────────────── */
+            .chart-section {
+                background: var(--surface);
+                padding: 10px 14px;
+                display: flex;
+                flex-direction: column;
+            }
+            .section-label {
+                font-size: 10px;
+                text-transform: uppercase;
+                letter-spacing: 0.6px;
+                color: var(--muted);
+                margin-bottom: 6px;
+                flex-shrink: 0;
+            }
+            #waterChart {
+                flex: 1;
+                min-height: 0;
+            }
+
+            .alerts-section {
+                background: var(--surface);
+                padding: 10px;
+                overflow-y: auto;
+                display: flex;
+                flex-direction: column;
+                gap: 4px;
+            }
+            .alert-item {
+                font-size: 11px;
+                padding: 4px 8px;
+                border-left: 2px solid var(--yellow);
+                background: rgba(210, 153, 34, 0.08);
+                border-radius: 0 3px 3px 0;
+                color: var(--text);
+                flex-shrink: 0;
+            }
+            .no-alerts {
+                font-size: 12px;
+                color: var(--muted);
+            }
+        </style>
+    </head>
+    <body>
+        <header>
+            <span class="logo">DNSBot Dashboard</span>
+            <div class="status-pill">
+                <div class="status-dot" id="statusDot"></div>
+                <span id="statusText">Connecting…</span>
+            </div>
+        </header>
+
+        <!-- Map (row 2, col 1) -->
+        <section class="map-section">
+            <canvas id="mapCanvas"></canvas>
+            <div class="map-legend">
+                <div class="legend-row">
+                    <div
+                        class="legend-swatch"
+                        style="background: #3b3b3b"
+                    ></div>
+                    Unknown
+                </div>
+                <div class="legend-row">
+                    <div class="legend-swatch" style="background: #ddd"></div>
+                    Free
+                </div>
+                <div class="legend-row">
+                    <div class="legend-swatch" style="background: #222"></div>
+                    Obstacle
+                </div>
+                <div class="legend-row">
+                    <div
+                        class="legend-swatch"
+                        style="background: rgba(255, 60, 60, 0.75)"
+                    ></div>
+                    Dry (needs water)
+                </div>
+                <div class="legend-row">
+                    <div
+                        class="legend-swatch"
+                        style="background: rgba(60, 100, 255, 0.65)"
+                    ></div>
+                    Wet (ok)
+                </div>
+                <div class="legend-row">
+                    <div
+                        class="legend-swatch"
+                        style="background: #00ff88"
+                    ></div>
+                    Robot
+                </div>
+                <div class="legend-row">
+                    <div
+                        class="legend-swatch"
+                        style="background: #d29922"
+                    ></div>
+                    Nav2 path
+                </div>
+            </div>
+        </section>
+
+        <!-- Sidebar (row 2, col 2) -->
+        <aside class="sidebar">
+            <div class="card">
+                <div class="card-label">Battery</div>
+                <div class="card-value" id="batteryVal">
+                    —<span class="card-unit">%</span>
+                </div>
+                <div class="bar-track">
+                    <div
+                        class="bar-fill"
+                        id="batteryBar"
+                        style="width: 0%"
+                    ></div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-label">Water Remaining</div>
+                <div class="card-value" id="waterRemVal">
+                    —<span class="card-unit">%</span>
+                </div>
+                <div class="bar-track">
+                    <div
+                        class="bar-fill"
+                        id="waterRemBar"
+                        style="width: 0%; background: var(--accent)"
+                    ></div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-label">Map Coverage</div>
+                <div class="card-value" id="coverageVal">
+                    —<span class="card-unit">%</span>
+                </div>
+                <div class="bar-track">
+                    <div
+                        class="bar-fill"
+                        id="coverageBar"
+                        style="width: 0%; background: #8957e5"
+                    ></div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-label">Weather</div>
+                <div class="weather-row">
+                    <div class="weather-icon" id="weatherIcon">⬜</div>
+                    <div>
+                        <div class="weather-val" id="weatherCond">—</div>
+                        <div class="weather-label" id="weatherSpeed">
+                            Speed scale: —
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-label">Irrigation</div>
+                <div class="weather-row">
+                    <div class="weather-icon" id="irrigIcon">💧</div>
+                    <div>
+                        <div class="weather-val" id="irrigStatus">—</div>
+                        <div class="weather-label" id="irrigSub">waiting for data</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-label">Water Saved vs Naive</div>
+                <div class="water-big" id="waterSavedPct">
+                    —<span
+                        style="
+                            font-size: 18px;
+                            font-weight: 400;
+                            color: var(--muted);
+                        "
+                        >%</span
+                    >
+                </div>
+                <div class="water-sub">
+                    less water than naive full-field irrigation
+                </div>
+                <div class="water-row">
+                    <span class="dt-color">DT: <b id="waterDT">—</b> L</span>
+                    <span class="naive-color"
+                        >Naive: <b id="waterNaive">—</b> L</span
+                    >
+                </div>
+            </div>
+        </aside>
+
+        <!-- Chart (row 3, col 1) -->
+        <section class="chart-section">
+            <div class="section-label">
+                Water usage over time — DNSBotvs Naive (L)
+            </div>
+            <canvas id="waterChart"></canvas>
+        </section>
+
+        <!-- Alerts (row 3, col 2) -->
+        <aside class="alerts-section">
+            <div class="section-label">Alerts</div>
+            <div id="alertsList"><div class="no-alerts">No alerts</div></div>
+        </aside>
+
+        <script src="https://cdn.jsdelivr.net/npm/roslib@1/build/roslib.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+        <script>
+            // ── Canvas setup ────────────────────────────────────────────────────────────
+            const canvas = document.getElementById("mapCanvas");
+            const ctx = canvas.getContext("2d");
+
+            // ── State ───────────────────────────────────────────────────────────────────
+            let mapMsg = null;
+            let humidityMsg = null;
+            let robotPose = null;
+            let navPath = null;
+            let mapScale = 1,
+                mapOffX = 0,
+                mapOffY = 0;
+
+            function resizeCanvas() {
+                const r = canvas.parentElement.getBoundingClientRect();
+                canvas.width = r.width;
+                canvas.height = r.height;
+                drawMap();
+            }
+            window.addEventListener("resize", resizeCanvas);
+            resizeCanvas();
+
+            const MAX_HISTORY = 90;
+            const history = { dt: [], naive: [], labels: [] };
+
+            // ── ROS ─────────────────────────────────────────────────────────────────────
+            const ros = new ROSLIB.Ros({ url: "ws://localhost:9090" });
+
+            ros.on("connection", () => setStatus("connected", "Connected"));
+            ros.on("error", () => setStatus("error", "Connection error"));
+            ros.on("close", () => setStatus("disconnected", "Disconnected"));
+
+            function sub(name, type, cb) {
+                new ROSLIB.Topic({ ros, name, messageType: type }).subscribe(
+                    cb,
+                );
+            }
+
+            sub("/map", "nav_msgs/OccupancyGrid", (msg) => {
+                mapMsg = msg;
+                drawMap();
+            });
+            sub("/humidityMap", "nav_msgs/OccupancyGrid", (msg) => {
+                humidityMsg = msg;
+                drawMap();
+            });
+            sub("/dashboard/robot_pose", "geometry_msgs/PoseStamped", (msg) => {
+                robotPose = msg;
+                drawMap();
+            });
+            sub("/plan", "nav_msgs/Path", (msg) => {
+                navPath = msg;
+                drawMap();
+            });
+            sub("/dashboard/battery", "std_msgs/Float32", (msg) =>
+                updateBar("battery", msg.data),
+            );
+            sub("/dashboard/water_remaining_pct", "std_msgs/Float32", (msg) =>
+                updateBar("waterRem", msg.data),
+            );
+            sub("/dashboard/coverage_pct", "std_msgs/Float32", (msg) =>
+                updateBar("coverage", msg.data),
+            );
+            sub("/dashboard/water_saved_pct", "std_msgs/Float32", (msg) => {
+                document.getElementById(
+                    "waterSavedPct",
+                ).childNodes[0].textContent = msg.data.toFixed(1);
+            });
+            sub("/dashboard/water_dt_liters", "std_msgs/Float32", (msg) => {
+                document.getElementById("waterDT").textContent =
+                    msg.data.toFixed(2);
+                pushHistory("dt", msg.data);
+            });
+            sub("/dashboard/water_naive_liters", "std_msgs/Float32", (msg) => {
+                document.getElementById("waterNaive").textContent =
+                    msg.data.toFixed(2);
+                pushHistory("naive", msg.data);
+            });
+            sub("/twin/context/rainy", "std_msgs/Bool", (msg) =>
+                updateWeather(msg.data),
+            );
+            sub("/twin/limits/speed_scale", "std_msgs/Float32", (msg) => {
+                document.getElementById("weatherSpeed").textContent =
+                    `Speed scale: ${(msg.data * 100).toFixed(0)}%`;
+            });
+            sub("/twin/alerts", "std_msgs/String", (msg) => addAlert(msg.data));
+            sub("/irrigating", "std_msgs/Bool", (msg) => updateIrrigation(msg.data));
+
+            // ── UI helpers ───────────────────────────────────────────────────────────────
+            function setStatus(cls, text) {
+                document.getElementById("statusDot").className =
+                    "status-dot " + cls;
+                document.getElementById("statusText").textContent = text;
+            }
+
+            function updateBar(id, rawVal) {
+                const pct = Math.max(0, Math.min(100, rawVal));
+                const valEl = document.getElementById(id + "Val");
+                valEl.childNodes[0].textContent = pct.toFixed(0);
+                const bar = document.getElementById(id + "Bar");
+                bar.style.width = pct + "%";
+                if (id === "battery") {
+                    bar.style.background =
+                        pct > 50
+                            ? "var(--green)"
+                            : pct > 20
+                              ? "var(--yellow)"
+                              : "var(--red)";
+                }
+            }
+
+            function updateIrrigation(active) {
+                document.getElementById("irrigIcon").textContent = active ? "💧" : "⏸️";
+                document.getElementById("irrigStatus").textContent = active ? "Irrigating" : "Idle";
+                document.getElementById("irrigSub").textContent = active ? "water pump ON" : "water pump OFF";
+            }
+
+            function updateWeather(rainy) {
+                document.getElementById("weatherIcon").textContent = rainy
+                    ? "🌧️"
+                    : "☀️";
+                document.getElementById("weatherCond").textContent = rainy
+                    ? "Rainy"
+                    : "Clear";
+            }
+
+            function addAlert(text) {
+                const list = document.getElementById("alertsList");
+                const empty = list.querySelector(".no-alerts");
+                if (empty) empty.remove();
+                const el = document.createElement("div");
+                el.className = "alert-item";
+                el.textContent = `[${new Date().toLocaleTimeString()}] ${text}`;
+                list.prepend(el);
+                while (list.children.length > 30) list.lastChild.remove();
+            }
+
+            // ── Water chart ──────────────────────────────────────────────────────────────
+            const waterChart = new Chart(
+                document.getElementById("waterChart"),
+                {
+                    type: "line",
+                    data: {
+                        labels: [],
+                        datasets: [
+                            {
+                                label: "DNSBot(smart)",
+                                data: [],
+                                borderColor: "#58a6ff",
+                                backgroundColor: "rgba(88,166,255,0.1)",
+                                fill: true,
+                                tension: 0.35,
+                                pointRadius: 0,
+                            },
+                            {
+                                label: "Naive (full)",
+                                data: [],
+                                borderColor: "#e3b341",
+                                backgroundColor: "rgba(227,179,65,0.08)",
+                                fill: true,
+                                tension: 0.35,
+                                pointRadius: 0,
+                            },
+                        ],
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        animation: false,
+                        scales: {
+                            x: {
+                                ticks: {
+                                    color: "#8b949e",
+                                    maxTicksLimit: 5,
+                                    font: { size: 10 },
+                                },
+                                grid: { color: "#21262d" },
+                            },
+                            y: {
+                                ticks: { color: "#8b949e", font: { size: 10 } },
+                                grid: { color: "#21262d" },
+                                beginAtZero: true,
+                            },
+                        },
+                        plugins: {
+                            legend: {
+                                labels: {
+                                    color: "#c9d1d9",
+                                    boxWidth: 10,
+                                    font: { size: 11 },
+                                },
+                            },
+                        },
+                    },
+                },
+            );
+
+            function pushHistory(key, val) {
+                history[key].push(val);
+                if (history[key].length > MAX_HISTORY) history[key].shift();
+                if (key === "dt") {
+                    history.labels.push(new Date().toLocaleTimeString());
+                    if (history.labels.length > MAX_HISTORY)
+                        history.labels.shift();
+                }
+                waterChart.data.labels = history.labels;
+                waterChart.data.datasets[0].data = history.dt;
+                waterChart.data.datasets[1].data = history.naive;
+                waterChart.update("none");
+            }
+
+            // ── Map rendering ────────────────────────────────────────────────────────────
+            function toInt8(v) {
+                return v > 127 ? v - 256 : v;
+            }
+
+            function worldToCanvas(wx, wy, info) {
+                const px =
+                    ((wx - info.origin.position.x) / info.resolution) *
+                        mapScale +
+                    mapOffX;
+                const py =
+                    canvas.height -
+                    mapOffY -
+                    ((wy - info.origin.position.y) / info.resolution) *
+                        mapScale;
+                return [px, py];
+            }
+
+            function drawMap() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                if (!mapMsg) return;
+
+                const { width: W, height: H, resolution, origin } = mapMsg.info;
+                if (W === 0 || H === 0) return;
+
+                mapScale = Math.min(canvas.width / W, canvas.height / H);
+                const drawW = W * mapScale;
+                const drawH = H * mapScale;
+                mapOffX = (canvas.width - drawW) / 2;
+                mapOffY = (canvas.height - drawH) / 2;
+
+                // 1. SLAM base map
+                const tmp = document.createElement("canvas");
+                tmp.width = W;
+                tmp.height = H;
+                const tctx = tmp.getContext("2d");
+                const img = tctx.createImageData(W, H);
+                for (let i = 0; i < W * H; i++) {
+                    const v = toInt8(mapMsg.data[i]);
+                    const c = v < 0 ? 59 : v === 0 ? 220 : 34;
+                    img.data[i * 4] = c;
+                    img.data[i * 4 + 1] = c;
+                    img.data[i * 4 + 2] = c;
+                    img.data[i * 4 + 3] = 255;
+                }
+                tctx.putImageData(img, 0, 0);
+
+                ctx.save();
+                ctx.translate(mapOffX, mapOffY + drawH);
+                ctx.scale(mapScale, -mapScale);
+                ctx.drawImage(tmp, 0, 0);
+                ctx.restore();
+
+                // 2. Humidity overlay
+                if (humidityMsg) {
+                    const {
+                        width: hw,
+                        height: hh,
+                        resolution: hr,
+                        origin: ho,
+                    } = humidityMsg.info;
+                    const cellPx = (hr / resolution) * mapScale;
+                    ctx.save();
+                    ctx.globalAlpha = 0.55;
+                    for (let row = 0; row < hh; row++) {
+                        for (let col = 0; col < hw; col++) {
+                            const v = toInt8(humidityMsg.data[row * hw + col]);
+                            if (v < 0) continue;
+                            const wet = v / 100;
+                            const dry = 1 - wet;
+                            ctx.fillStyle = `rgb(${Math.round(255 * dry)},80,${Math.round(255 * wet)})`;
+                            const wx = ho.position.x + col * hr;
+                            const wy = ho.position.y + row * hr;
+                            const [px, py] = worldToCanvas(wx, wy, mapMsg.info);
+                            ctx.fillRect(px, py - cellPx, cellPx, cellPx);
+                        }
+                    }
+                    ctx.restore();
+                }
+
+                // 3. Nav2 planned path
+                if (navPath && navPath.poses.length > 1) {
+                    ctx.save();
+                    ctx.strokeStyle = "#d29922";
+                    ctx.lineWidth = 2;
+                    ctx.setLineDash([5, 4]);
+                    ctx.beginPath();
+                    navPath.poses.forEach((ps, i) => {
+                        const [px, py] = worldToCanvas(
+                            ps.pose.position.x,
+                            ps.pose.position.y,
+                            mapMsg.info,
+                        );
+                        i === 0 ? ctx.moveTo(px, py) : ctx.lineTo(px, py);
+                    });
+                    ctx.stroke();
+                    ctx.restore();
+                }
+
+                // 4. Robot
+                if (robotPose) {
+                    const { x, y } = robotPose.pose.position;
+                    const {
+                        x: qx,
+                        y: qy,
+                        z: qz,
+                        w: qw,
+                    } = robotPose.pose.orientation;
+                    const yaw = Math.atan2(
+                        2 * (qw * qz + qx * qy),
+                        1 - 2 * (qy * qy + qz * qz),
+                    );
+                    const [px, py] = worldToCanvas(x, y, mapMsg.info);
+                    const sz = 12;
+                    ctx.save();
+                    ctx.translate(px, py);
+                    ctx.rotate(-yaw);
+                    ctx.fillStyle = "#00ff88";
+                    ctx.strokeStyle = "#004422";
+                    ctx.lineWidth = 1.5;
+                    ctx.beginPath();
+                    ctx.moveTo(sz, 0);
+                    ctx.lineTo(-sz / 2, sz / 2);
+                    ctx.lineTo(-sz / 2, -sz / 2);
+                    ctx.closePath();
+                    ctx.fill();
+                    ctx.stroke();
+                    ctx.restore();
+                }
+            }
+        </script>
+    </body>
+</html>
