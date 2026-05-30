@@ -15,6 +15,7 @@
   <depend>nav_msgs</depend>
   <depend>my_tb3_world</depend>
   <exec_depend>python3-numpy</exec_depend>
+  <depend>custom_interfaces</depend>
 
   <test_depend>ament_copyright</test_depend>
   <test_depend>ament_flake8</test_depend>

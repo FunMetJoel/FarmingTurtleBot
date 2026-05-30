@@ -2,24 +2,34 @@ import rclpy
 from rclpy.node import Node
 from std_msgs.msg import Float64
 import random
+from rclpy.qos import QoSProfile, ReliabilityPolicy, HistoryPolicy
 
 class RandomHumiditySensorNode(Node):
 
     def __init__(self):
         super().__init__('RandomHumiditySensor')
 
-        self.publisher_ = self.create_publisher(Float64, '/humidity', 10)
 
-        self.timer_ = self.create_timer(0.1, self.publish_humidity)
+        qos_profile = QoSProfile(
+            reliability=ReliabilityPolicy.BEST_EFFORT,
+            history=HistoryPolicy.KEEP_LAST,
+            depth=1
+        )
+
+        self.publisher_ = self.create_publisher(Float64, '/humidity', qos_profile)
+
+        self.timer_ = self.create_timer(1, self.publish_humidity)
+
+        self.randomizer = random.Random()
+        self.msg = Float64()
 
         self.get_logger().info(
             "RandomHumiditySensor node started, publishing to /humidity(Float64)"
         )
 
     def publish_humidity(self):
-        data = Float64()
-        data.data = random.Random().random() * 10
-        self.publisher_.publish(data)
+        self.msg.data = self.randomizer.random() * 10
+        self.publisher_.publish(self.msg)
 
 
 def main(args=None):
