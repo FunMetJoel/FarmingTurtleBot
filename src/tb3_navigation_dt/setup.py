@@ -28,7 +28,9 @@ setup(
     entry_points={
         'console_scripts': [
             'nav_to_pos = tb3_navigation_dt.nav_to_pos:main',
-            'random_walk = tb3_navigation_dt.random_walk:main'
+            'random_walk = tb3_navigation_dt.random_walk:main',
+            'NavigationControllerNode = tb3_navigation_dt.NavigationControllerNode:main',
+            'SafetySupervisorNode = tb3_navigation_dt.SafetySupervisorNode:main',
         ],
     },
 )

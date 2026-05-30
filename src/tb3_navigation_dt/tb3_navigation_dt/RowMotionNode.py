@@ -2,12 +2,20 @@ import rclpy
 from rclpy.node import Node
 from sensor_msgs.msg import LaserScan
 from geometry_msgs.msg import TwistStamped, Twist
+from std_msgs.msg import Float64
+from geometry_msgs.msg import Vector3, TransformStamped, Transform
+from tf2_msgs.msg import TFMessage
+from tf2_ros import TransformException
+from tf2_ros.buffer import Buffer
+from tf2_ros.transform_listener import TransformListener
+from rclpy.qos import QoSProfile, ReliabilityPolicy, HistoryPolicy
 import math
 
-class RandomWalkNode(Node):
+
+class RowMotionNode(Node):
 
     def __init__(self):
-        super().__init__('random_walk')
+        super().__init__('row_motion')
         self.subscription = self.create_subscription(
             LaserScan,
             '/scan',
@@ -17,9 +25,25 @@ class RandomWalkNode(Node):
 
         self.movingFowardState = True
         self.startup = True
+        self.currentLocation: Transform = None
 
+
+    def get_robot_position(self):
+        try:
+            now = rclpy.time.Time()
+            trans = self.tf_buffer.lookup_transform(
+                'map',
+                'base_footprint',
+                now
+            )
+
+            self.currentLocation: Transform = trans.transform
+        except TransformException as ex:
+            self.get_logger().info(
+                f'Could not transform find position'
+            )
         
-    def sendInitCmd(self):
+    def send_initial_command(self):
         twistStamped:TwistStamped = TwistStamped()
         twistStamped.header.stamp = self.get_clock().now().to_msg()
         twistStamped.header.frame_id = "base_link"
@@ -69,9 +93,9 @@ class RandomWalkNode(Node):
 
 def main(args=None):
     rclpy.init(args=args)
-    random_walk = RandomWalkNode()
-    rclpy.spin(random_walk)
-    random_walk.destroy_node()
+    row_motion = RowMotionNode()
+    rclpy.spin(row_motion)
+    row_motion.destroy_node()
     rclpy.shutdown()
 
 if __name__ == '__main__':
