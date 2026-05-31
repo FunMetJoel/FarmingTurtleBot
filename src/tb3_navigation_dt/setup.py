@@ -32,6 +32,7 @@ setup(
         'console_scripts': [
             'nav_to_pos = tb3_navigation_dt.nav_to_pos:main',
             'coverageOrchestrator = tb3_navigation_dt.coverage_orchestrator:main',
+            'safetySupervisorNode = tb3_navigation_dt.SafetySupervisorNode:main',
         ],
     },
 )

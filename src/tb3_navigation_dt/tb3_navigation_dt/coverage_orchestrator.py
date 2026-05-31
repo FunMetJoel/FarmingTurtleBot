@@ -97,7 +97,7 @@ def main(args=None):
     explorer = FrontierExplorer()
 
     explorer.get_logger().info('Waiting for Nav2...')
-    explorer.waitUntilNav2Active(localizer='slam_toolbox')
+    explorer.waitUntilNav2Active()
     explorer.get_logger().info('Nav2 active — starting mission')
 
     # Wait for first map message
