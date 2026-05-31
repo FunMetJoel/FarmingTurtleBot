@@ -2,6 +2,7 @@ import rclpy
 from rclpy.node import Node
 from rclpy.qos import QoSProfile, ReliabilityPolicy
 from std_msgs.msg import Float64
+from custom_interfaces.srv import ValidateWaterUsage
 
 class SimWaterLevel(Node):
 
@@ -49,6 +50,12 @@ class SimWaterLevel(Node):
             '/sim_water_level_error',
             10
         )
+        
+        self.validate_water_usage_service = self.create_service(
+            ValidateWaterUsage,
+            '/validate_water_usage',
+            self.validate_water_usage_callback
+        )
 
     # Every time a message is received from the robots water tank, check
     # the difference between the robot and the simulation. Report the
@@ -93,6 +100,16 @@ class SimWaterLevel(Node):
             self.water_level = 0.0
 
         self.get_logger().info(f'use of {amount:.4f}, now at {self.water_level:.4f}')
+
+    def validate_water_usage_callback(self, request, response):
+        # Validate that there is enough water to serve the requested usage
+        if request.amount < 0.0:
+            self.get_logger().warning("validation failed, negative amount requested")
+            response.usage_possible = False
+        else:
+            response.usage_possible = request.amount <= self.water_level
+            self.get_logger().info(f'validation {"success" if response.usage_possible else "failed"}, requested {request.amount:.4f} while {self.water_level:.4f} available')
+        return response
 
 
 def main(args=None):
