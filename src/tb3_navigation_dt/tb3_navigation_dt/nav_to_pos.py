@@ -8,14 +8,14 @@ def main():
     nav = BasicNavigator()
 
     # 1. Set initial pose (Optional if already set in RViz)
-    initial_pose = PoseStamped()
-    initial_pose.header.frame_id = 'map'
-    initial_pose.header.stamp = nav.get_clock().now().to_msg()
-    initial_pose.pose.position.x = 0.0
-    initial_pose.pose.position.y = 0.0
-    initial_pose.pose.orientation.z = 0.0
-    initial_pose.pose.orientation.w = 1.0
-    nav.setInitialPose(initial_pose)
+    # initial_pose = PoseStamped()
+    # initial_pose.header.frame_id = 'map'
+    # initial_pose.header.stamp = nav.get_clock().now().to_msg()
+    # initial_pose.pose.position.x = 0.0
+    # initial_pose.pose.position.y = 0.0
+    # initial_pose.pose.orientation.z = 0.0
+    # initial_pose.pose.orientation.w = 1.0
+    # nav.setInitialPose(initial_pose)
 
     # 2. Wait for Nav2 to be fully active
     nav.waitUntilNav2Active()
@@ -24,8 +24,8 @@ def main():
     goal_pose = PoseStamped()
     goal_pose.header.frame_id = 'map'
     goal_pose.header.stamp = nav.get_clock().now().to_msg()
-    goal_pose.pose.position.x = 0.5  # Move 2 meters forward
-    goal_pose.pose.position.y = 0.5  # Move 1 meter left
+    goal_pose.pose.position.x = 0.0  # Move 2 meters forward
+    goal_pose.pose.position.y = 0.0  # Move 1 meter left
     goal_pose.pose.orientation.w = 1.0
 
     # 4. Go to the pose!
