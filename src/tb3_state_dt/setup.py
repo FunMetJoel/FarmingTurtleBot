@@ -30,6 +30,7 @@ setup(
         'console_scripts': [
             'rob_water_level = tb3_state_dt.rob_water_level:main',
             'sim_water_level = tb3_state_dt.sim_water_level:main',
+            'sim_battery_level = tb3_state_dt.sim_battery_level:main',
         ],
     },
 )
