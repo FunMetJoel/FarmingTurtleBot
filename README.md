@@ -8,7 +8,7 @@ Joël Rodenbach - @FunMetJoel
 Samu Németh - @samunemeth  
 Ignacy Świderski - @igifigi  
 Can Erturk - @ErturkCan  
-
+Frederic Cahn von Seelen - @frederic-cvs  
 
 *Please add yourself here to the list.*
 
@@ -17,4 +17,3 @@ CBL Autonomous Systems Twinning course.
 
 Please keep commit messages concise and all lower case. Add extra detail to the
 description if needed.
-
