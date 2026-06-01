@@ -1,5 +1,6 @@
 import rclpy
 from rclpy.node import Node
+from rclpy.qos import QoSProfile, ReliabilityPolicy
 from sensor_msgs.msg import BatteryState
 from std_msgs.msg import Float64
 
@@ -9,7 +10,7 @@ class SimBatteryLevel(Node):
         super().__init__('battery_level_controller')
 
         # At the start assume that the battery is empty.
-        self.bettery_level = 0.0
+        self.battery_level = 0.0
         self.get_logger().info('started, assuming 0.0')
 
         # Subscribe to the battery state topic. This will
@@ -43,9 +44,9 @@ class SimBatteryLevel(Node):
         error_msg.data = battery_level_error
         self.battery_error_publisher.publish(error_msg)
         
-        self.bettery_level = msg.data
+        self.battery_level = msg.data
         self.battery_level_publisher.publish(msg)
-        self.get_logger().info(f'synced with error {battery_level_error:.4f}, now at {self.battery_level:.4f}'))
+        self.get_logger().info(f'synced with error {battery_level_error:.4f}, now at {self.battery_level:.4f}')
 
     # TODO: Add actual simulation of the battery depleting.
     # TODO: Add a service for validating if a set of actions takes too much battery.
@@ -54,7 +55,7 @@ class SimBatteryLevel(Node):
 
 def main(args=None):
     rclpy.init(args=args)
-    node = BatteryLevelController()
+    node = SimBatteryLevel()
     rclpy.spin(node)
     node.destroy_node()
     rclpy.shutdown()
