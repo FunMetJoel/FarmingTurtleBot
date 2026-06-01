@@ -5,6 +5,8 @@ from launch.launch_description_sources import PythonLaunchDescriptionSource
 from ament_index_python.packages import get_package_share_directory
 from launch.substitutions import LaunchConfiguration
 from launch_ros.actions import SetRemap
+from launch_ros.actions import Node
+
 
 def generate_launch_description():
     cartographer_dir = get_package_share_directory('turtlebot3_cartographer')
@@ -37,6 +39,12 @@ def generate_launch_description():
                     }.items()
                 ),
             ]
+        ),
+
+        Node(
+            package='tb3_navigation_dt',
+            executable='safetySupervisorNode',
+            name='safetySupervisorNode',
         ),
 
         use_sim_time_arg

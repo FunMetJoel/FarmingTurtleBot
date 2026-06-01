@@ -1,6 +1,8 @@
 from setuptools import find_packages, setup
 import os
 from glob import glob
+import os
+from glob import glob
 
 package_name = 'tb3_navigation_dt'
 
@@ -13,6 +15,7 @@ setup(
             ['resource/' + package_name]),
         ('share/' + package_name, ['package.xml']),
         (os.path.join('share', package_name, 'launch'), glob(os.path.join('launch', '*launch.[pxy][yma]*'))),
+        (os.path.join('share', package_name, 'config'), glob(os.path.join('config', '*.yaml'))),
     ],
     install_requires=['setuptools'],
     zip_safe=True,
@@ -28,9 +31,9 @@ setup(
     entry_points={
         'console_scripts': [
             'nav_to_pos = tb3_navigation_dt.nav_to_pos:main',
-            'random_walk = tb3_navigation_dt.random_walk:main',
-            'NavigationControllerNode = tb3_navigation_dt.NavigationControllerNode:main',
-            'SafetySupervisorNode = tb3_navigation_dt.SafetySupervisorNode:main',
+            'coverageOrchestrator = tb3_navigation_dt.coverage_orchestrator:main',
+            'safetySupervisorNode = tb3_navigation_dt.SafetySupervisorNode:main',
+            'navigationControllerNode = tb3_navigation_dt.NavigationControllerNode:main',
         ],
     },
 )
