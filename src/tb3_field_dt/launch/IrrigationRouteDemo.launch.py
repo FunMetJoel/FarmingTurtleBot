@@ -26,5 +26,11 @@ def generate_launch_description():
             name='simpleRouteFollower',
             condition=IfCondition(drive_robot),
             output='screen'
+        ),
+        Node(
+            package='tb3_navigation_dt',
+            executable='SafetySupervisorNode',
+            name='SafetySupervisorNode',
+            output='screen'
         )
     ])

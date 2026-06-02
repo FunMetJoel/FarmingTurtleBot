@@ -12,7 +12,7 @@ class SimpleRouteFollowerNode(Node):
     def __init__(self):
         super().__init__('SimpleRouteFollower')
 
-        self.declare_parameter('cmd_vel_topic', '/cmd_vel')
+        self.declare_parameter('cmd_vel_topic', '/cmd_vel_raw')
         self.declare_parameter('linear_speed', 0.12)
         self.declare_parameter('angular_speed', 0.45)
         self.declare_parameter('goal_tolerance', 0.10)
