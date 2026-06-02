@@ -8,6 +8,7 @@ Joël Rodenbach - @FunMetJoel
 Samu Németh - @samunemeth  
 Ignacy Świderski - @igifigi  
 Can Erturk - @ErturkCan  
+Marnix van den Bosch - @Marnix900
 
 
 *Please add yourself here to the list.*
