@@ -63,6 +63,7 @@ class DynamicMap():
         return worldX, worldY
     
     def worldToPixelCords(self, x:float, y:float) -> tuple[int, int]:
+        # (0,0) should be at the center of the pixel, so we round to the nearest pixel
         pixelX:int = round((x - self.originX) / self.resolution)
         pixelY:int = round((y - self.originY) / self.resolution)
         return pixelX, pixelY
@@ -71,10 +72,16 @@ class DynamicMap():
         occupancyGridData = np.empty((self.sizeX, self.sizeY), dtype=np.int8) # Array with values between -1 and 100
        
         scale:float = max - min
-        occupancyGridData = ((self.array - min) * (100.0 / scale)).clip(0, 100).round().astype(int)
+        occupancyGridData = ((self.array - min) * (100.0 / scale)).clip(0, 100).round()
     
         occupancyGridData[np.isnan(self.array)] = -1
 
-        return occupancyGridData
+        return occupancyGridData.astype(int)
+    
+    def subtractEverywhere(self, value:float):
+        self.array = self.array - value
+        self.array[self.array < 0.001] = 0.001
+            
+
 
 
