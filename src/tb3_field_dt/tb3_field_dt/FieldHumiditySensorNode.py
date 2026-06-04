@@ -22,6 +22,13 @@ class FieldHumiditySensorNode(Node):
 
         self.publisher_ = self.create_publisher(Float64, '/humidity', qos_profile)
 
+        self.subscription_ = self.create_subscription(
+            Float64,
+            '/water',
+            self.on_water_received,
+            10
+        )
+
         self.timer_ = self.create_timer(1, self.publish_humidity)
 
         self.field = RealField()
@@ -46,6 +53,15 @@ class FieldHumiditySensorNode(Node):
         except Exception as ex:
             self.get_logger().info(
                 f'Could not transform find position {ex}'
+            )
+
+    def on_water_received(self, msg:Float64):
+        location = self.get_location()
+        if location is not None:
+            self.field.set_humidity_at(location.translation.x, location.translation.y, msg.data)
+        else:
+            self.get_logger().info(
+                f'Could not get location, ignoring water message'
             )
 
     def publish_humidity(self):
