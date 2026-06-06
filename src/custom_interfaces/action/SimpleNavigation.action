@@ -1,0 +1,8 @@
+# Request
+geometry_msgs/Pose2D goal
+---
+# Result
+uint16 error_code
+---
+# Feedback
+float64 distance_to_goal
