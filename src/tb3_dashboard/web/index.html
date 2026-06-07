@@ -479,8 +479,8 @@
             sub("/dashboard/battery", "std_msgs/Float32", (msg) =>
                 updateBar("battery", msg.data),
             );
-            sub("/dashboard/water_remaining_pct", "std_msgs/Float32", (msg) =>
-                updateBar("waterRem", msg.data),
+            sub("/rob_water_level", "std_msgs/Float64", (msg) =>
+                updateBar("waterRem", msg.data * 100),
             );
             sub("/dashboard/coverage_pct", "std_msgs/Float32", (msg) =>
                 updateBar("coverage", msg.data),
