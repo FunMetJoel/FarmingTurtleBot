@@ -683,6 +683,9 @@
                 ctx.save();
                 ctx.translate(mapOffX, mapOffY + drawH);
                 ctx.scale(mapScale, -mapScale);
+                ctx.imageSmoothingEnabled = false;
+                ctx.webkitImageSmoothingEnabled = false;
+                ctx.mozImageSmoothingEnabled = false;
                 ctx.drawImage(tmp, 0, 0);
                 ctx.restore();
 
