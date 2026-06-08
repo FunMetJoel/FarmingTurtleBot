@@ -48,3 +48,25 @@ Simulate a battery level report from the robot:
 ```bash
 ros2 topic pub /battery_state sensor_msgs/msg/BatteryState 'percentage: .6' --once
 ```
+
+# State
+
+## Starting
+
+Run the following commands in separate terminals:
+```bash
+ros2 run tb3_state_dt rob_state
+ros2 run tb3_state_dt sim_state
+```
+
+## Manipulating
+
+To manually set the state on the robot node, use the command below (valid states are `idle`, `moving`, `irrigating`, `filling`, `error`):
+```bash
+ros2 topic pub /cmd_rob_state std_msgs/String 'data: "moving"' --once
+```
+
+To manually set the state on the simulated node, use the command below:
+```bash
+ros2 topic pub /cmd_sim_state std_msgs/String 'data: "filling"' --once
+```
