@@ -34,6 +34,8 @@ setup(
             'coverageOrchestrator = tb3_navigation_dt.coverage_orchestrator:main',
             'safetySupervisorNode = tb3_navigation_dt.SafetySupervisorNode:main',
             'navigationControllerNode = tb3_navigation_dt.NavigationControllerNode:main',
+            'backAndForth = tb3_navigation_dt.backAndForth:main',
+            'simpleNavigator = tb3_navigation_dt.simpleNavigator:main',
         ],
     },
 )
