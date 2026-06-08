@@ -1,6 +1,8 @@
 
 This file contains information on how to test the state synchronisation.
 
+# Water Level
+
 ## Starting
 
 Run the following commands in separate terminals to start the two nodes
@@ -29,4 +31,20 @@ This will return `true` if the requested amount of water is currently
 available in the simulated tank.
 ```bash
 ros2 service call /validate_water_usage custom_interfaces/srv/ValidateWaterUsage 'amount: .8'
+```
+
+# Battery Level
+
+## Starting
+
+Run the following command to start the simulated battery level:
+```bash
+ros2 run tb3_state_dt sim_battery_level
+```
+
+## Manipulating
+
+Simulate a battery level report from the robot:
+```bash
+ros2 topic pub /battery_state sensor_msgs/msg/BatteryState 'percentage: .6' --once
 ```

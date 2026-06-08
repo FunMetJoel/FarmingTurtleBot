@@ -2,16 +2,19 @@ import rclpy
 from rclpy.node import Node
 from rclpy.qos import QoSProfile, ReliabilityPolicy
 from sensor_msgs.msg import BatteryState
-from std_msgs.msg import Float64
+from std_msgs.msg import Float64, String
 
 class SimBatteryLevel(Node):
+
+    LOW_BATTERY_TRESSHOLD = 0.2
+    CRITICAL_BATTERY_TRESSHOLD = 0.05
 
     def __init__(self):
         super().__init__('battery_level_controller')
 
-        # At the start assume that the battery is empty.
-        self.battery_level = 0.0
-        self.get_logger().info('started, assuming 0.0')
+        # At the start assume that the battery is about half full.
+        self.battery_level = 0.5
+        self.get_logger().info(f'started, assuming {self.battery_level}')
 
         # Subscribe to the battery state topic. This will
         # have the data from the real battery.
@@ -36,6 +39,14 @@ class SimBatteryLevel(Node):
             '/sim_battery_level_error',
             10
         )
+        self.battery_low_publisher = self.create_publisher(
+            String,
+            '/sim_battery_low_alert',
+            10
+        )
+
+        # Check for a low battery level periodically.
+        self.timer1 = self.create_timer(1.0, self.battery_low_alert)
 
     def sync_battery_level(self, msg: BatteryState):
         battery_level_error = abs(self.battery_level - msg.percentage)
@@ -51,10 +62,24 @@ class SimBatteryLevel(Node):
         self.battery_level_publisher.publish(forward_msg)
         self.get_logger().info(f'synced with error {battery_level_error:.4f}, now at {self.battery_level:.4f}')
 
-    # TODO: Add actual simulation of the battery depleting.
-    # TODO: Add a service for validating if a set of actions takes too much battery.
-    # TODO: Some kind of battery low alert perhaps?
+    def battery_low_alert(self):
 
+        # If the battery level is above the tresshold, we can skip the iteration.
+        if self.battery_level >= self.LOW_BATTERY_TRESSHOLD:
+            return
+
+        # Determine if the battery level is low or critical.
+        warning_msg = String()
+        if self.battery_level >= self.CRITICAL_BATTERY_TRESSHOLD:
+            warning_msg.data = "LOW"
+        else:
+            warning_msg.data = "CRITICAL"
+
+        self.battery_low_publisher.publish(warning_msg)
+        self.get_logger().warning(f"battery {warning_msg.data}, now at {self.battery_level:.4f}")
+
+    # Maybe add actual simulation of the battery depleting.
+    # Maybe add a service for validating if a set of actions takes too much battery.
 
 def main(args=None):
     rclpy.init(args=args)
