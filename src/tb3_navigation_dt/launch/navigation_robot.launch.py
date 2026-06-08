@@ -9,30 +9,21 @@ from launch_ros.actions import Node
 
 def generate_launch_description():
     pkg_nav = get_package_share_directory('tb3_navigation_dt')
-    pkg_world = get_package_share_directory('my_tb3_world')
     nav2_bringup = get_package_share_directory('nav2_bringup')
-    # tb3_nav2_params = os.path.join(
-    #     get_package_share_directory('turtlebot3_navigation2'),
-    #     'param', 'burger.yaml'
-    # )
-    tb3_nav2_params = os.path.join(pkg_nav, 'config', 'nav2_params.yaml')
+    tb3_nav2_params = os.path.join(
+        get_package_share_directory('turtlebot3_navigation2'),
+        'param', 'burger.yaml'
+    )
 
+    # Real robot always uses wall clock
     use_sim_time_arg = DeclareLaunchArgument(
         'use_sim_time',
-        default_value='true',
-        description='Use Gazebo simulation clock'
+        default_value='false',
+        description='Use simulation clock (false for real robot)'
     )
     use_sim_time = LaunchConfiguration('use_sim_time')
 
-    # Gazebo world + robot
-    gazebo = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(
-            os.path.join(pkg_world, 'launch', 'new_world.launch.py')
-        ),
-        launch_arguments={'use_sim_time': use_sim_time}.items()
-    )
-
-    # SLAM Toolbox in online async mapping mode
+    # SLAM — maps the real environment
     slam = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
             os.path.join(nav2_bringup, 'launch', 'slam_launch.py')
@@ -43,6 +34,7 @@ def generate_launch_description():
         }.items()
     )
 
+    # Nav2
     navigation = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
             os.path.join(nav2_bringup, 'launch', 'navigation_launch.py')
@@ -74,7 +66,7 @@ def generate_launch_description():
         parameters=[{'use_sim_time': use_sim_time}],
     )
 
-    # Water level (robot sensor + digital twin)
+    # Water level
     rob_water_level = Node(
         package='tb3_state_dt',
         executable='rob_water_level',
@@ -88,7 +80,15 @@ def generate_launch_description():
         output='screen',
     )
 
-    # Weather context for digital twin
+    # Battery — reads from real /battery_state published by TurtleBot3
+    sim_battery_level = Node(
+        package='tb3_state_dt',
+        executable='sim_battery_level',
+        name='sim_battery_level',
+        output='screen',
+    )
+
+    # Weather context
     weather_adapter = Node(
         package='tb3_weather_dt',
         executable='weather_adapter',
@@ -102,11 +102,11 @@ def generate_launch_description():
         output='screen',
     )
 
-    # Coverage: frontier exploration + zigzag humidity sweep
-    coverage_orchestrator = Node(
+    # Safety supervisor
+    safety_supervisor = Node(
         package='tb3_navigation_dt',
-        executable='coverageOrchestrator',
-        name='coverageOrchestrator',
+        executable='SafetySupervisorNode',
+        name='SafetySupervisorNode',
         output='screen',
     )
 
@@ -120,7 +120,6 @@ def generate_launch_description():
 
     return LaunchDescription([
         use_sim_time_arg,
-        gazebo,
         slam,
         navigation,
         random_humidity_sensor,
@@ -128,8 +127,9 @@ def generate_launch_description():
         humidity_map,
         rob_water_level,
         sim_water_level,
+        sim_battery_level,
         weather_adapter,
         twin_safety_supervisor,
-        coverage_orchestrator,
+        safety_supervisor,
         dashboard_server,
     ])

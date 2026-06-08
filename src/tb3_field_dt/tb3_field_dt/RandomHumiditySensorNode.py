@@ -18,7 +18,7 @@ class RandomHumiditySensorNode(Node):
 
         self.publisher_ = self.create_publisher(Float64, '/humidity', qos_profile)
 
-        self.timer_ = self.create_timer(1, self.publish_humidity)
+        self.timer_ = self.create_timer(0.25, self.publish_humidity)
 
         self.randomizer = random.Random()
         self.msg = Float64()

@@ -17,6 +17,7 @@ class RandomWalkNode(Node):
 
         self.movingFowardState = True
         self.startup = True
+        self.direction = 0
 
         
     def sendInitCmd(self):
@@ -48,14 +49,20 @@ class RandomWalkNode(Node):
             if self.movingFowardState and front_distance < 0.5:
                 self.get_logger().info(f'Wall detected! Distance: {front_distance:.2f}m. Stopping.')
                 self.movingFowardState = False
-                twistStamped.twist.linear.x = 0.0
-                twistStamped.twist.angular.z = 0.3 if self.getCloserSide(msg) else -0.3
-                self.publisher.publish(twistStamped)
+                self.direction = 0.3 if self.getCloserSide(msg) else -0.3
+
             if (not self.movingFowardState) and bigger_range_front_distance > 1:
                 self.get_logger().info(f'Path clear. Distance: {front_distance:.2f}m')
                 self.movingFowardState = True
-                twistStamped.twist.linear.x = 0.2
+
+
+            if self.movingFowardState:
+                twistStamped.twist.linear.x = 1.0
                 twistStamped.twist.angular.z = 0.0
+                self.publisher.publish(twistStamped)
+            else:
+                twistStamped.twist.linear.x = 0.0
+                twistStamped.twist.angular.z = self.direction
                 self.publisher.publish(twistStamped)
 
     def getCloserSide(self, scanMsg):

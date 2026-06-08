@@ -8,7 +8,8 @@ Joël Rodenbach - @FunMetJoel
 Samu Németh - @samunemeth  
 Ignacy Świderski - @igifigi  
 Can Erturk - @ErturkCan  
-Frederic Cahn von Seelen - @frederic-cvs  
+Marnix van den Bosch - @Marnix900
+Frederic Cahn von Seelen - @frederic-cvs
 
 *Please add yourself here to the list.*
 
