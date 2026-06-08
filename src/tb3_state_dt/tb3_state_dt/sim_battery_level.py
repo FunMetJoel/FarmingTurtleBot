@@ -44,8 +44,11 @@ class SimBatteryLevel(Node):
         error_msg.data = battery_level_error
         self.battery_error_publisher.publish(error_msg)
         
-        self.battery_level = msg.data
-        self.battery_level_publisher.publish(msg)
+        self.battery_level = msg.percentage
+
+        forward_msg = Float64()
+        forward_msg.data = self.battery_level
+        self.battery_level_publisher.publish(forward_msg)
         self.get_logger().info(f'synced with error {battery_level_error:.4f}, now at {self.battery_level:.4f}')
 
     # TODO: Add actual simulation of the battery depleting.
