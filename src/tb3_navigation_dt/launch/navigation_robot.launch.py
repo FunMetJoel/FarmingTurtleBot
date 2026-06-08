@@ -111,17 +111,10 @@ def generate_launch_description():
     )
 
     # Dashboard
-    rosbridge = Node(
-        package='rosbridge_server',
-        executable='rosbridge_websocket',
-        name='rosbridge_websocket',
-        parameters=[{'port': 9090}],
-        output='screen',
-    )
-    dashboard_bridge = Node(
+    dashboard_server = Node(
         package='tb3_dashboard',
-        executable='dashboard_bridge',
-        name='dashboard_bridge',
+        executable='dashboard_server',
+        name='dashboard_server',
         output='screen',
     )
 
@@ -138,6 +131,5 @@ def generate_launch_description():
         weather_adapter,
         twin_safety_supervisor,
         safety_supervisor,
-        rosbridge,
-        dashboard_bridge,
+        dashboard_server,
     ])

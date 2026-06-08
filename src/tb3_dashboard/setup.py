@@ -22,6 +22,7 @@ setup(
     license='MIT',
     entry_points={
         'console_scripts': [
+            'dashboard_server = tb3_dashboard.dashboard_server:main',
             'dashboard_bridge = tb3_dashboard.dashboard_bridge:main',
             'dummy_publisher  = tb3_dashboard.dummy_publisher:main',
         ],

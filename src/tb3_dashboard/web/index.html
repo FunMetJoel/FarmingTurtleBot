@@ -419,7 +419,6 @@
             <div id="alertsList"><div class="no-alerts">No alerts</div></div>
         </aside>
 
-        <script src="https://cdn.jsdelivr.net/npm/roslib@1/build/roslib.min.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
         <script>
             // ── Canvas setup ────────────────────────────────────────────────────────────
@@ -447,68 +446,53 @@
             const MAX_HISTORY = 90;
             const history = { dt: [], naive: [], labels: [] };
 
-            // ── ROS ─────────────────────────────────────────────────────────────────────
-            const ros = new ROSLIB.Ros({ url: "ws://localhost:9090" });
+            let knownAlertCount = 0;
 
-            ros.on("connection", () => setStatus("connected", "Connected"));
-            ros.on("error", () => setStatus("error", "Connection error"));
-            ros.on("close", () => setStatus("disconnected", "Disconnected"));
+            // ── Polling ─────────────────────────────────────────────────────────────────
+            function poll() {
+                fetch("/api/state")
+                    .then((r) => r.json())
+                    .then((s) => {
+                        setStatus("connected", "Connected");
 
-            function sub(name, type, cb) {
-                new ROSLIB.Topic({ ros, name, messageType: type }).subscribe(
-                    cb,
-                );
+                        if (s.map)          { mapMsg      = s.map; }
+                        if (s.humidity_map) { humidityMsg = s.humidity_map; }
+                        if (s.robot_pose)   { robotPose   = s.robot_pose; }
+                        if (s.nav_path)     { navPath     = s.nav_path; }
+
+                        if (s.battery        !== null) updateBar("battery",  s.battery);
+                        if (s.water_level    !== null) updateBar("waterRem", s.water_level * 100);
+                        if (s.coverage_pct   !== null) updateBar("coverage", s.coverage_pct);
+
+                        if (s.water_saved_pct !== null) {
+                            document.getElementById("waterSavedPct").childNodes[0].textContent =
+                                s.water_saved_pct.toFixed(1);
+                        }
+                        if (s.water_dt_liters !== null) {
+                            document.getElementById("waterDT").textContent =
+                                s.water_dt_liters.toFixed(2);
+                            pushHistory("dt", s.water_dt_liters);
+                        }
+                        if (s.water_naive_liters !== null) {
+                            document.getElementById("waterNaive").textContent =
+                                s.water_naive_liters.toFixed(2);
+                            pushHistory("naive", s.water_naive_liters);
+                        }
+                        if (s.rainy       !== null) updateWeather(s.rainy);
+                        if (s.speed_scale !== null) {
+                            document.getElementById("weatherSpeed").textContent =
+                                `Speed scale: ${(s.speed_scale * 100).toFixed(0)}%`;
+                        }
+                        if (s.irrigating !== null) updateIrrigation(s.irrigating);
+
+                        updateAlerts(s.alerts || []);
+                        drawMap();
+                    })
+                    .catch(() => setStatus("error", "Connection error"));
             }
 
-            sub("/map", "nav_msgs/OccupancyGrid", (msg) => {
-                mapMsg = msg;
-                drawMap();
-            });
-            sub("/humidityMap", "nav_msgs/OccupancyGrid", (msg) => {
-                humidityMsg = msg;
-                drawMap();
-            });
-            sub("/dashboard/robot_pose", "geometry_msgs/PoseStamped", (msg) => {
-                robotPose = msg;
-                drawMap();
-            });
-            sub("/plan", "nav_msgs/Path", (msg) => {
-                navPath = msg;
-                drawMap();
-            });
-            sub("/dashboard/battery", "std_msgs/Float32", (msg) =>
-                updateBar("battery", msg.data),
-            );
-            sub("/rob_water_level", "std_msgs/Float64", (msg) =>
-                updateBar("waterRem", msg.data * 100),
-            );
-            sub("/dashboard/coverage_pct", "std_msgs/Float32", (msg) =>
-                updateBar("coverage", msg.data),
-            );
-            sub("/dashboard/water_saved_pct", "std_msgs/Float32", (msg) => {
-                document.getElementById(
-                    "waterSavedPct",
-                ).childNodes[0].textContent = msg.data.toFixed(1);
-            });
-            sub("/dashboard/water_dt_liters", "std_msgs/Float32", (msg) => {
-                document.getElementById("waterDT").textContent =
-                    msg.data.toFixed(2);
-                pushHistory("dt", msg.data);
-            });
-            sub("/dashboard/water_naive_liters", "std_msgs/Float32", (msg) => {
-                document.getElementById("waterNaive").textContent =
-                    msg.data.toFixed(2);
-                pushHistory("naive", msg.data);
-            });
-            sub("/twin/context/rainy", "std_msgs/Bool", (msg) =>
-                updateWeather(msg.data),
-            );
-            sub("/twin/limits/speed_scale", "std_msgs/Float32", (msg) => {
-                document.getElementById("weatherSpeed").textContent =
-                    `Speed scale: ${(msg.data * 100).toFixed(0)}%`;
-            });
-            sub("/twin/alerts", "std_msgs/String", (msg) => addAlert(msg.data));
-            sub("/irrigating", "std_msgs/Bool", (msg) => updateIrrigation(msg.data));
+            setInterval(poll, 1000);
+            poll();
 
             // ── UI helpers ───────────────────────────────────────────────────────────────
             function setStatus(cls, text) {
@@ -548,14 +532,20 @@
                     : "Clear";
             }
 
-            function addAlert(text) {
+            function updateAlerts(alerts) {
+                if (alerts.length === knownAlertCount) return;
                 const list = document.getElementById("alertsList");
+                // prepend only the new alerts (server keeps them oldest-first)
+                const newAlerts = alerts.slice(knownAlertCount);
                 const empty = list.querySelector(".no-alerts");
                 if (empty) empty.remove();
-                const el = document.createElement("div");
-                el.className = "alert-item";
-                el.textContent = `[${new Date().toLocaleTimeString()}] ${text}`;
-                list.prepend(el);
+                newAlerts.forEach((text) => {
+                    const el = document.createElement("div");
+                    el.className = "alert-item";
+                    el.textContent = `[${new Date().toLocaleTimeString()}] ${text}`;
+                    list.prepend(el);
+                });
+                knownAlertCount = alerts.length;
                 while (list.children.length > 30) list.lastChild.remove();
             }
 
