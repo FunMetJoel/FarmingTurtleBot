@@ -36,6 +36,7 @@ setup(
             'navigationControllerNode = tb3_navigation_dt.NavigationControllerNode:main',
             'backAndForth = tb3_navigation_dt.backAndForth:main',
             'simpleNavigator = tb3_navigation_dt.simpleNavigator:main',
+            'explorerNode = tb3_navigation_dt.ExplorerNode:main',
         ],
     },
 )
