@@ -20,3 +20,4 @@ CBL Autonomous Systems Twinning course.
 Please keep commit messages concise and all lower case. Add extra detail to the
 description if needed.
 
+For instructions on demonstrating state synchronisation consult the [README of the `tb3_state_dt` package](./src/tb3_state_dt/README.md).
