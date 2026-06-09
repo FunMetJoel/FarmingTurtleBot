@@ -7,3 +7,13 @@ class RobotState(Enum):
     IRRIGATING = "irrigating"
     FILLING = "filling"
     ERROR = "error"
+
+class SystemMode(Enum):
+    """Enum for state of the DT system."""
+    DISCOVER = 0
+    MAP = 1
+    IDLE = 2
+    SIMULATING = 3
+    IRRIGATING = 4
+    FILLING = 5
+    ERROR = 6
