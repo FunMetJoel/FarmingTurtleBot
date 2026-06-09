@@ -48,7 +48,6 @@ class SimpleNavigator(Node):
         result = future.result().result
         status = future.result().status
         
-        # Check against the proper GoalStatus constant
         if status == GoalStatus.STATUS_SUCCEEDED:
             self.get_logger().info('Goal reached successfully!')
         elif status == GoalStatus.STATUS_CANCELED:

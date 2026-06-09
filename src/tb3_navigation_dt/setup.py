@@ -38,6 +38,7 @@ setup(
             'simpleNavigator = tb3_navigation_dt.simpleNavigator:main',
             'explorerNode = tb3_navigation_dt.ExplorerNode:main',
             'random_walk = tb3_navigation_dt.random_walk:main',
+            'dockingNode = tb3_navigation_dt.DockingNode:main'
         ],
     },
 )

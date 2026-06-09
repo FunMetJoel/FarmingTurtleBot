@@ -28,6 +28,8 @@ find_package(geometry_msgs REQUIRED)
 
 rosidl_generate_interfaces(${PROJECT_NAME}
   "action/SimpleNavigation.action"
+  "action/DockRobot.action"
+  "action/MapField.action
   "srv/ValidateWaterUsage.srv"
   DEPENDENCIES 
     geometry_msgs
