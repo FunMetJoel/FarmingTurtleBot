@@ -32,6 +32,8 @@ setup(
             'randomHumiditySensor = tb3_field_dt.RandomHumiditySensorNode:main',
             'humiditySensorInterpreter = tb3_field_dt.HumiditySensorInterpreterNode:main',
             'humidityMap = tb3_field_dt.HumidityMapNode:main',
+            'irrigationRoutePlanner = tb3_field_dt.IrrigationRoutePlannerNode:main',
+            'simpleRouteFollower = tb3_field_dt.SimpleRouteFollowerNode:main',
             'fieldHumiditySensor = tb3_field_dt.FieldHumiditySensorNode:main'
         ],
     },
