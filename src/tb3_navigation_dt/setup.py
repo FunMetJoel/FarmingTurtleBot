@@ -16,7 +16,6 @@ setup(
         ('share/' + package_name, ['package.xml']),
         (os.path.join('share', package_name, 'launch'), glob(os.path.join('launch', '*launch.[pxy][yma]*'))),
         (os.path.join('share', package_name, 'config'), glob(os.path.join('config', '*.yaml'))),
-        (os.path.join('share', package_name, 'config'), glob(os.path.join('config', '*.yaml'))),
     ],
     install_requires=['setuptools'],
     zip_safe=True,
@@ -38,9 +37,7 @@ setup(
             'backAndForth = tb3_navigation_dt.backAndForth:main',
             'simpleNavigator = tb3_navigation_dt.simpleNavigator:main',
             'explorerNode = tb3_navigation_dt.ExplorerNode:main',
-            'coverageOrchestrator = tb3_navigation_dt.coverage_orchestrator:main',
             'random_walk = tb3_navigation_dt.random_walk:main',
-
         ],
     },
 )
