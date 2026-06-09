@@ -1,5 +1,5 @@
 docker run --rm -it --name turtlebot3_container \
- --net=host \
+ -p 8080:8080 \
  --workdir /ws \
  -e DISPLAY=$DISPLAY \
  -v /tmp/.X11-unix:/tmp/.X11-unix \
