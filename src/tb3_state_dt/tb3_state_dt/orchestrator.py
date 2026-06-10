@@ -64,7 +64,7 @@ class OrchestratorNode(Node):
                 self._discover_action_client.send_goal_async(
                     goal_msg,
                     # feedback_callback=self.feedback_callback
-                ).add_done_callback(self.onDoneDiscovering)
+                ).add_done_callback(self._onStartDiscovering)
                 
                 return
 
@@ -92,6 +92,15 @@ class OrchestratorNode(Node):
                 self.get_logger().warn("Not implemented")
                 return
 
+    def _onStartDiscovering(self, future):
+        goal_handle = future.result()
+        
+        if not goal_handle.accepted:
+            self.get_logger().info('Goal rejected by the action server')
+            return
+
+        get_result_future = goal_handle.get_result_async()
+        get_result_future.add_done_callback(self.onDoneDiscovering)
 
     def onDoneDiscovering(self, future):
         status = future.result().status

@@ -145,8 +145,8 @@ class DiscovererNode(SimpleNavigator):
         elif status == 6:
             pass
         else:
-            self.get_logger().info(f'Failed to reach Docking station with status code: {status}')
             self.failedToNavigateCounter += 1
+            self.get_logger().info(f'Failed to reach Docking station with status code: {status}, failed {self.failedToNavigateCounter} times')
 
 def main():
     rclpy.init()
