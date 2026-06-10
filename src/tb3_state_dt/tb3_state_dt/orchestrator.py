@@ -12,7 +12,7 @@ from tf2_ros import Buffer, TransformListener
 from geometry_msgs.msg import PoseStamped
 from rclpy.executors import MultiThreadedExecutor
 from std_msgs.msg import Int32
-from custom_interfaces.action import DockRobot, MapField
+from custom_interfaces.action import DockRobot, MapField, DiscoverField
 from tb3_state_dt.enums import SystemMode
 from action_msgs.msg import GoalStatus
 
@@ -40,7 +40,8 @@ class OrchestratorNode(Node):
         )
 
         self._publisher = self.create_publisher(Int32, '/mode', qos_profile)
-        self._discover_action_client = ActionClient(self, DockRobot, '/dock_robot')
+        self._dock_action_client = ActionClient(self, DockRobot, '/dock_robot')
+        self._discover_action_client = ActionClient(self, DiscoverField, '/fieldDiscovery')
         self._map_action_client = ActionClient(self, MapField, '/map_field')
 
         self.get_logger().info('Orchestrator node initialized.')
@@ -58,7 +59,13 @@ class OrchestratorNode(Node):
     def startupMode(self):
         match self.mode:
             case SystemMode.DISCOVER:
-                # TODO: Startup discover action
+                self._discover_action_client.wait_for_server()
+                goal_msg = DiscoverField.Goal()
+                self._discover_action_client.send_goal_async(
+                    goal_msg,
+                    # feedback_callback=self.feedback_callback
+                ).add_done_callback(self.onDoneDiscovering)
+                
                 return
 
             case SystemMode.MAP:
@@ -87,7 +94,6 @@ class OrchestratorNode(Node):
 
 
     def onDoneDiscovering(self, future):
-        result = future.result().result
         status = future.result().status
 
         match status:
@@ -174,3 +180,13 @@ class OrchestratorNode(Node):
                 self.setMode(SystemMode.ERROR)
 
 
+def main():
+    rclpy.init()
+    node = OrchestratorNode()
+    executor = MultiThreadedExecutor()
+    rclpy.spin(node, executor=executor)
+    node.destroy_node()
+    rclpy.shutdown()
+    
+if __name__ == '__main__':
+    main()
