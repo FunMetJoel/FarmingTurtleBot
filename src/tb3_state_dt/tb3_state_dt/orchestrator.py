@@ -179,14 +179,14 @@ class OrchestratorNode(Node):
                 self.get_logger().info(f'Goal failed with status code: {status}')
                 self.setMode(SystemMode.ERROR)
 
-
 def main():
     rclpy.init()
     node = OrchestratorNode()
     executor = MultiThreadedExecutor()
-    rclpy.spin(node, executor=executor)
+    executor.add_node(node)
+    executor.spin()
     node.destroy_node()
     rclpy.shutdown()
-    
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     main()
