@@ -42,7 +42,7 @@ class SimpleNavigator(Node):
             self.cli.call_async(req)
 
 
-        self.get_logger().info(f'Sending goal: ({x}, {y})')
+        self.get_logger().debug(f'Sending goal: ({x}, {y})')
 
         self._send_goal_future = self._action_client.send_goal_async(
             goal_msg,
@@ -53,10 +53,10 @@ class SimpleNavigator(Node):
     def goal_response_callback(self, future):
         goal_handle = future.result()
         if not goal_handle.accepted:
-            self.get_logger().info('Goal rejected (ugh)')
+            self.get_logger().debug('Goal rejected (ugh)')
             return
 
-        self.get_logger().info('Goal accepted (yay)')
+        self.get_logger().debug('Goal accepted (yay)')
 
         self._get_result_future = goal_handle.get_result_async()
         self._get_result_future.add_done_callback(self.get_result_callback)

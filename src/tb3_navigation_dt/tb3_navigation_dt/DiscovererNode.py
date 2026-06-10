@@ -13,7 +13,8 @@ from custom_interfaces.action import DiscoverField
 import matplotlib.pyplot as plt
 import heapq
 
-NAVIGATIONFAILURELIMIT = 100
+NAVIGATIONFAILURELIMIT = 5
+MAX_COST_THRESHOLD = 10000
 
 class DiscovererNode(SimpleNavigator):
     
@@ -52,20 +53,22 @@ class DiscovererNode(SimpleNavigator):
                 self.get_logger().info("Failed two many times, assuming no new frontiers")
                 break
 
-            frontier = self._calculate_frontiers()
+            frontier, cost = self._calculate_frontiers()
+            if cost > MAX_COST_THRESHOLD:
+                self.failedToNavigateCounter += 1
 
-            mapToShow = np.reshape(self.map.data, (self.map.info.height, self.map.info.width))
-            mapToShow[frontier[0], frontier[1]] = -100
-            self.get_logger().warn(f"{frontier},  {mapToShow[frontier[0], frontier[1]]}")
+            # mapToShow = np.reshape(self.map.data, (self.map.info.height, self.map.info.width))
+            # mapToShow[frontier[0], frontier[1]] = -100
+            # mapToShow[mapToShow == -1] = -50
 
-            plt.figure(figsize=(10, 10))
-            plt.imshow(mapToShow, cmap='gray', origin='lower')
-            plt.colorbar(label='Reachable')
-            plt.title('Reachability Grid')
-            plt.xlabel('Column')
-            plt.ylabel('Row')
-            plt.savefig('HopelijkWerktDit.png', dpi=150, bbox_inches='tight')
-            plt.close()
+            # plt.figure(figsize=(10, 10))
+            # plt.imshow(mapToShow, cmap='gray', origin='lower')
+            # plt.colorbar(label='Reachable')
+            # plt.title('Reachability Grid')
+            # plt.xlabel('Column')
+            # plt.ylabel('Row')
+            # plt.savefig('HopelijkWerktDit.png', dpi=150, bbox_inches='tight')
+            # plt.close()
 
             if frontier is None:
                 return
@@ -111,7 +114,7 @@ class DiscovererNode(SimpleNavigator):
             current_cost, y, x = heapq.heappop(queue)
 
             if map[y, x] == -1:
-                return (y, x)
+                return (y, x), current_cost
             
             if current_cost > min_costs[y, x]:
                 continue
@@ -129,23 +132,21 @@ class DiscovererNode(SimpleNavigator):
                         min_costs[ny, nx] = new_cost
                         heapq.heappush(queue, (new_cost, ny, nx))
 
-        return None
+        return None, np.inf
 
     @override
     def get_result_callback(self, future):
         result = future.result().result
         status = future.result().status
         
-        self.get_logger().info(f"{self.failedToNavigateCounter}")
 
         if status == 4: # TaskResult.SUCCEEDED
             self.get_logger().info(f'Docking station reached successfully!')
+        elif status == 6:
+            pass
         else:
             self.get_logger().info(f'Failed to reach Docking station with status code: {status}')
             self.failedToNavigateCounter += 1
-
-        if self.failedToNavigateCounter < NAVIGATIONFAILURELIMIT:
-            self.send_goal(*self.frontier)
 
 def main():
     rclpy.init()
