@@ -184,8 +184,11 @@ class SafetySupervisorNode(Node):
         else:
             safe = msg
 
-        self.real_pub.publish(safe)
-        self.sim_pub.publish(safe)
+        if self.mode_guard.is_simulating():
+            self.sim_pub.publish(safe)
+        else:
+            self.real_pub.publish(safe)
+            self.sim_pub.publish(safe)
 
 def main(args=None):
     rclpy.init(args=args)
