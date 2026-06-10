@@ -27,6 +27,7 @@ class SafetySupervisorNode(Node):
         self.sim_cmd_topic = self.get_parameter('sim_cmd_topic').value
         self.stop_distance = float(self.get_parameter('stop_distance').value)
         self.front_angle_deg = float(self.get_parameter('front_angle_deg').value)
+        self.mode_guard = ModeGuard(self)
 
         self.real_blocked_front = False
         self.real_blocked_back = False
@@ -153,8 +154,12 @@ class SafetySupervisorNode(Node):
 
         forward_requested = msg.twist.linear.x > 0.0
         backward_requested = msg.twist.linear.x < 0.0
-        blocked_front = self.real_blocked_front or self.sim_blocked_front
-        blocked_back = self.real_blocked_back or self.sim_blocked_back
+        if self.mode_guard.is_simulating():
+            blocked_front = self.sim_blocked_front
+            blocked_back = self.sim_blocked_back
+        else:
+            blocked_front = self.real_blocked_front or self.sim_blocked_front
+            blocked_back = self.real_blocked_back or self.sim_blocked_back
         blocked = (blocked_front and forward_requested) or (blocked_back and backward_requested)
 
         self.get_logger().info(
