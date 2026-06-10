@@ -7,3 +7,8 @@ class RobotState(Enum):
     IRRIGATING = "irrigating"
     FILLING = "filling"
     ERROR = "error"
+
+class RobotMode(Enum):
+    """Enum for robot mode shared between files.""" 
+    REAL = "real"
+    SIM = "sim"
