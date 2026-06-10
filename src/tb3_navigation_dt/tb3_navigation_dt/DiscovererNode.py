@@ -53,11 +53,25 @@ class DiscovererNode(SimpleNavigator):
                 break
 
             frontier = self._calculate_frontiers()
+
+            mapToShow = np.reshape(self.map.data, (self.map.info.height, self.map.info.width))
+            mapToShow[frontier[0], frontier[1]] = -100
+            self.get_logger().warn(f"{frontier},  {mapToShow[frontier[0], frontier[1]]}")
+
+            plt.figure(figsize=(10, 10))
+            plt.imshow(mapToShow, cmap='gray', origin='lower')
+            plt.colorbar(label='Reachable')
+            plt.title('Reachability Grid')
+            plt.xlabel('Column')
+            plt.ylabel('Row')
+            plt.savefig('HopelijkWerktDit.png', dpi=150, bbox_inches='tight')
+            plt.close()
+
             if frontier is None:
                 return
             self.frontier = (
-                frontier[0] * self.map.info.resolution + self.map.info.origin.position.x,
-                frontier[1] * self.map.info.resolution + self.map.info.origin.position.y,
+                (frontier[1] * self.map.info.resolution) + self.map.info.origin.position.x,
+                (frontier[0] * self.map.info.resolution) + self.map.info.origin.position.y,
             )
             self.get_logger().info(f"{frontier}, {self.frontier}")
 
