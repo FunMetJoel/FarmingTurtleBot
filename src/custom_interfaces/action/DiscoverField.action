@@ -1,0 +1,7 @@
+# Request
+---
+# Result
+uint16 error_code
+---
+# Feedback
+int32 borders_left
