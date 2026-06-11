@@ -44,8 +44,8 @@ def generate_launch_description():
 
         Node(
             package='tb3_navigation_dt',
-            executable='safetySupervisorNode',
-            name='safetySupervisorNode',
+            executable='SafetySupervisorNode',
+            name='SafetySupervisorNode',
         ),
 
         use_sim_time_arg
