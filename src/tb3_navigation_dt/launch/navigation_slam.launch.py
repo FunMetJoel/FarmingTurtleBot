@@ -1,10 +1,10 @@
 import os
 from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription
+from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription, GroupAction
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration
-from launch_ros.actions import Node
+from launch_ros.actions import Node, SetRemap
 
 
 def generate_launch_description():
@@ -37,14 +37,19 @@ def generate_launch_description():
         }.items()
     )
 
-    navigation = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(
-            os.path.join(nav2_bringup, 'launch', 'navigation_launch.py')
-        ),
-        launch_arguments={
-            'use_sim_time': use_sim_time,
-            'params_file': tb3_nav2_params,
-        }.items()
+    navigation = GroupAction(
+        actions=[
+            SetRemap(src='/cmd_vel', dst='/cmd_vel_raw'),
+            IncludeLaunchDescription(
+                PythonLaunchDescriptionSource(
+                    os.path.join(nav2_bringup, 'launch', 'navigation_launch.py')
+                ),
+                launch_arguments={
+                    'use_sim_time': use_sim_time,
+                    'params_file': tb3_nav2_params,
+                }.items()
+            ),
+        ]
     )
 
     # Humidity pipeline
@@ -96,6 +101,14 @@ def generate_launch_description():
         output='screen',
     )
 
+    # Safety supervisor
+    safety_supervisor = Node(
+        package='tb3_navigation_dt',
+        executable='SafetySupervisorNode',
+        name='SafetySupervisorNode',
+        output='screen',
+    )
+
     # Coverage: frontier exploration + zigzag humidity sweep
     coverage_orchestrator = Node(
         package='tb3_navigation_dt',
@@ -124,6 +137,7 @@ def generate_launch_description():
         sim_water_level,
         weather_adapter,
         twin_safety_supervisor,
+        safety_supervisor,
         coverage_orchestrator,
         dashboard_server,
     ])
