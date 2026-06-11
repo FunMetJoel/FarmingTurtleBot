@@ -7,6 +7,7 @@ from rclpy.node import Node
 from geometry_msgs.msg import Pose, PoseArray, Point, Quaternion
 from nav_msgs.msg import Odometry
 from std_msgs.msg import String
+from tb3_state_dt.mode_guard import ModeGuard
 
 
 @dataclass
@@ -33,10 +34,12 @@ class IrrigationRoutePlannerNode(Node):
         self.robot_x = 0.0
         self.robot_y = 0.0
         self.has_odom = False
+        self.mode_guard = ModeGuard(self)
 
         self.route_publisher = self.create_publisher(PoseArray, '/irrigation/route', 10)
         self.debug_publisher = self.create_publisher(String, '/irrigation/route_debug', 10)
-        self.create_subscription(Odometry, '/odom', self.odom_callback, 10)
+        self.create_subscription(Odometry, '/odom', self.real_odom_callback, 10)
+        self.create_subscription(Odometry, '/sim/odom', self.sim_odom_callback, 10)
 
         self.nodes = self.make_demo_nodes()
         self.route_published = False
@@ -180,6 +183,16 @@ class IrrigationRoutePlannerNode(Node):
 
     def distance(self, a, b):
         return math.sqrt((a[0] - b[0]) ** 2 + (a[1] - b[1]) ** 2)
+    
+    def real_odom_callback(self, msg):
+        if self.mode_guard.is_simulating():
+            return
+        self.odom_callback(msg)
+
+    def sim_odom_callback(self, msg):
+        if not self.mode_guard.is_simulating():
+            return
+        self.odom_callback(msg)
 
 
 def main(args=None):
