@@ -6,6 +6,8 @@ from geometry_msgs.msg import PoseStamped
 from action_msgs.msg import GoalStatus
 from rcl_interfaces.srv import SetParameters
 from rcl_interfaces.msg import Parameter, ParameterType, ParameterValue
+import tf2_ros
+
 
 class SimpleNavigator(Node):
     def __init__(self, node_name='simple_navigator'):
@@ -13,13 +15,28 @@ class SimpleNavigator(Node):
         self._action_client = ActionClient(self, NavigateToPose, 'navigate_to_pose')
         self.cli = self.create_client(SetParameters, '/controller_server/set_parameters')
 
+        self.tf_buffer   = tf2_ros.Buffer()
+        self.tf_listener = tf2_ros.TransformListener(self.tf_buffer, self)
+
+    def getRobotPos(self):
+        try:
+            t = self.tf_buffer.lookup_transform('map', 'base_footprint', rclpy.time.Time())
+        except Exception:
+            return (0, 0, 0)
+        return (
+            t.transform.translation.x,
+            t.transform.translation.y,
+            t.transform.rotation
+        )
+
     def send_goal(self, x, y, w:float|None = None):
+        self.get_logger().debug(f"send_goal: {x}, {y}, {w}")
         dontSendParam = False
-        self.get_logger().info(f'Waiting for action server...')
+        self.get_logger().debug(f'Waiting for action server...')
         self._action_client.wait_for_server()
-        self.get_logger().info(f"Waiting on service")
+        self.get_logger().debug(f"Waiting on service")
         if not self.cli.wait_for_service(timeout_sec=1.0):
-            self.get_logger().info(f"UGH")
+            self.get_logger().warn(f"Could not get service to set rotation requirement")
             dontSendParam = True
         req = SetParameters.Request()
         
@@ -27,20 +44,18 @@ class SimpleNavigator(Node):
         goal_msg = NavigateToPose.Goal()
         goal_msg.pose.header.frame_id = 'map'
         goal_msg.pose.header.stamp = self.get_clock().now().to_msg()
-        goal_msg.pose.pose.position.x = x
-        goal_msg.pose.pose.position.y = y
+        goal_msg.pose.pose.position.x = float(x)
+        goal_msg.pose.pose.position.y = float(y)
         if w is not None:
-            goal_msg.pose.pose.orientation.w = w
+            goal_msg.pose.pose.orientation.w = float(w)
             param_value = ParameterValue(type=ParameterType.PARAMETER_DOUBLE, double_value=0.25)
         else:
             goal_msg.pose.pose.orientation.w = 1.0
             param_value = ParameterValue(type=ParameterType.PARAMETER_DOUBLE, double_value=6.28)
-
         param = Parameter(name='goal_checker.yaw_goal_tolerance', value=param_value)
         req.parameters = [param]
         if not dontSendParam:
             self.cli.call_async(req)
-
 
         self.get_logger().debug(f'Sending goal: ({x}, {y})')
 
@@ -48,6 +63,7 @@ class SimpleNavigator(Node):
             goal_msg,
             feedback_callback=self.feedback_callback
         )
+        
         self._send_goal_future.add_done_callback(self.goal_response_callback)
 
     def goal_response_callback(self, future):
@@ -79,6 +95,7 @@ class SimpleNavigator(Node):
             self.get_logger().info(f'Goal failed with status code: {status}')
 
 def main(args=None):
+
     rclpy.init(args=args)
     node = SimpleNavigator()
     node.set_parameters([rclpy.parameter.Parameter('use_sim_time', rclpy.Parameter.Type.BOOL, True)])

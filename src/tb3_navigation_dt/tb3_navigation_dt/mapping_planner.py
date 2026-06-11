@@ -12,6 +12,7 @@ def generate_mapping_waypoints(occupancy_map_msg, humidity_map_msg):
     cell_size = humidity_map_msg.info.resolution
     low_res_occupancy_grid = _generate_low_res_occupancy_grid(occupancy_map_msg, cell_size=cell_size)
     reachable_grid = _generate_reachability_grid(occupancy_map_msg)
+
     h = low_res_occupancy_grid.shape[0]
     w = low_res_occupancy_grid.shape[1]
     waypoints = []
@@ -21,8 +22,17 @@ def generate_mapping_waypoints(occupancy_map_msg, humidity_map_msg):
     for i in range(h):
         for j in range(w):
             if not low_res_occupancy_grid[i, j]:  # If the cell is not occupied
+                
                 x = orgX + j * cell_size
                 y = orgY + i * cell_size
+
+                # check of this coordinate x y is reachable using the reachable_grid
+                grid_x = round((x - occupancy_map_msg.info.origin.position.x) / occupancy_map_msg.info.resolution)
+                grid_y = round((y - occupancy_map_msg.info.origin.position.y) / occupancy_map_msg.info.resolution)
+                if not (0 <= grid_x < reachable_grid.shape[0] and 0 <= grid_y < reachable_grid.shape[1]):
+                    continue
+                if not reachable_grid[grid_x, grid_y]:
+                    continue
 
                 waypoints.append((x, y))
 
@@ -40,14 +50,14 @@ def _generate_low_res_occupancy_grid(occupancy_map_msg, cell_size):
 
     h = occupancy_map_msg.info.height
     w = occupancy_map_msg.info.width
-    res = occupancy_map_msg.info.resolution
+    res = occupancy_map_msg.info.resolution # m/cell
     ox = occupancy_map_msg.info.origin.position.x
     oy = occupancy_map_msg.info.origin.position.y
 
     grid = np.array(occupancy_map_msg.data, dtype=np.int8).reshape(h, w)
 
-    low_res_h = int(np.ceil((h * res) / cell_size))
-    low_res_w = int(np.ceil((w * res) / cell_size))
+    low_res_h = int(np.floor((h * res) / cell_size))
+    low_res_w = int(np.floor((w * res) / cell_size))
     low_res_grid = np.zeros((low_res_h, low_res_w), dtype=bool)
 
     for i in range(low_res_h):
@@ -79,7 +89,7 @@ def _generate_reachability_grid(occupancy_map_msg):
 
     h = occupancy_map_msg.info.height
     w = occupancy_map_msg.info.width
-    res = occupancy_map_msg.info.resolution
+    res = occupancy_map_msg.info.resolution # m/cell
     ox = occupancy_map_msg.info.origin.position.x
     oy = occupancy_map_msg.info.origin.position.y
 
@@ -111,15 +121,6 @@ def _generate_reachability_grid(occupancy_map_msg):
                 if not reachable[nrow, ncol] and not occupied[nrow, ncol]:
                     reachable[nrow, ncol] = True
                     stack.append((nrow, ncol))
-
-    # plt.figure(figsize=(10, 10))
-    # plt.imshow(reachable, cmap='gray', origin='lower')
-    # plt.colorbar(label='Reachable')
-    # plt.title('Reachability Grid')
-    # plt.xlabel('Column')
-    # plt.ylabel('Row')
-    # plt.savefig('reachability_map.png', dpi=150, bbox_inches='tight')
-    # plt.close()
     
     return reachable
 
