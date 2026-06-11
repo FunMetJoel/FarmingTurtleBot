@@ -4,9 +4,11 @@ from dataclasses import dataclass
 import rclpy
 from rclpy.executors import ExternalShutdownException
 from rclpy.node import Node
+from rclpy.time import Time
 from geometry_msgs.msg import Pose, PoseArray, Point, Quaternion
-from nav_msgs.msg import Odometry
+from nav_msgs.msg import OccupancyGrid
 from std_msgs.msg import String
+from tf2_ros import Buffer, TransformException, TransformListener
 
 
 @dataclass
@@ -18,52 +20,115 @@ class IrrigationNode:
     moisture_drop_per_second: float
 
 
+def nodes_from_humidity_map(msg, moisture_drop_per_second):
+    width = msg.info.width
+    height = msg.info.height
+
+    if width * height != len(msg.data):
+        raise ValueError('Humidity map dimensions do not match its data')
+
+    resolution = msg.info.resolution
+    origin_x = msg.info.origin.position.x
+    origin_y = msg.info.origin.position.y
+    nodes = []
+
+    for index, moisture in enumerate(msg.data):
+        if moisture < 0:
+            continue
+
+        row, column = divmod(index, width)
+        nodes.append(IrrigationNode(
+            id=f'{row}:{column}',
+            x=origin_x + (column + 0.5) * resolution,
+            y=origin_y + (row + 0.5) * resolution,
+            moisture=float(moisture),
+            moisture_drop_per_second=moisture_drop_per_second,
+        ))
+
+    return nodes
+
+
 class IrrigationRoutePlannerNode(Node):
 
     def __init__(self):
         super().__init__('IrrigationRoutePlanner')
 
-        self.declare_parameter('moisture_threshold', 4.0)
+        self.declare_parameter('moisture_threshold', 40.0)
         self.declare_parameter('minimum_dry_nodes', 5)
         self.declare_parameter('average_drive_speed', 0.15)
         self.declare_parameter('irrigation_time_per_node', 6.0)
         self.declare_parameter('extra_time_factor', 1.20)
-        self.declare_parameter('frame_id', 'odom')
+        self.declare_parameter('frame_id', 'map')
+        self.declare_parameter('moisture_drop_per_second', 0.1)
 
-        self.robot_x = 0.0
-        self.robot_y = 0.0
-        self.has_odom = False
+        self.frame_id = str(self.get_parameter('frame_id').value)
+        self.reported_missing_transform = False
+        self.tf_buffer = Buffer()
+        self.tf_listener = TransformListener(self.tf_buffer, self)
 
         self.route_publisher = self.create_publisher(PoseArray, '/irrigation/route', 10)
         self.debug_publisher = self.create_publisher(String, '/irrigation/route_debug', 10)
-        self.create_subscription(Odometry, '/odom', self.odom_callback, 10)
+        self.create_subscription(
+            OccupancyGrid,
+            '/humidityMap',
+            self.humidity_map_callback,
+            10
+        )
 
-        self.nodes = self.make_demo_nodes()
+        self.nodes = []
         self.route_published = False
         self.timer = self.create_timer(1.0, self.plan_and_publish_route)
 
         self.get_logger().info('Irrigation route planner started')
 
-    def make_demo_nodes(self):
-        # These are fake field nodes for the lab demo. Waiting for field mapping alg to work w/ real data
-        return [
-            IrrigationNode('A', 0.50, 0.00, 2.8, 0.000),
-            IrrigationNode('B', 0.50, 0.55, 3.1, 0.000),
-            IrrigationNode('C', 0.00, 0.85, 3.4, 0.000),
-            IrrigationNode('D', -0.55, 0.50, 2.9, 0.000),
-            IrrigationNode('E', -0.55, -0.10, 3.8, 0.000),
-            IrrigationNode('F', 0.52, 0.28, 4.4, 0.007),
-            IrrigationNode('G', 0.85, -0.45, 4.8, 0.004),
-            IrrigationNode('H', -0.95, 0.85, 5.5, 0.002),
-        ]
+    def humidity_map_callback(self, msg):
+        moisture_drop = float(
+            self.get_parameter('moisture_drop_per_second').value
+        )
 
-    def odom_callback(self, msg):
-        self.robot_x = msg.pose.pose.position.x
-        self.robot_y = msg.pose.pose.position.y
-        self.has_odom = True
+        try:
+            self.nodes = nodes_from_humidity_map(msg, moisture_drop)
+        except ValueError as error:
+            self.get_logger().warning(str(error))
+            return
+
+        self.frame_id = msg.header.frame_id or self.frame_id
+        self.reported_missing_transform = False
+        self.get_logger().info(
+            f'Received {len(self.nodes)} humidity nodes in {self.frame_id}'
+        )
+
+    def get_robot_position(self):
+        try:
+            transform = self.tf_buffer.lookup_transform(
+                self.frame_id,
+                'base_footprint',
+                Time()
+            )
+        except TransformException:
+            if not self.reported_missing_transform:
+                self.get_logger().warning(
+                    f'Waiting for transform '
+                    f'{self.frame_id} -> base_footprint'
+                )
+                self.reported_missing_transform = True
+            return None
+
+        self.reported_missing_transform = False
+        return (
+            transform.transform.translation.x,
+            transform.transform.translation.y,
+        )
 
     def plan_and_publish_route(self):
         if self.route_published:
+            return
+
+        if not self.nodes:
+            return
+
+        start = self.get_robot_position()
+        if start is None:
             return
 
         threshold = float(self.get_parameter('moisture_threshold').value)
@@ -78,7 +143,6 @@ class IrrigationRoutePlannerNode(Node):
             ))
             return
 
-        start = (self.robot_x, self.robot_y)
         route = self.nearest_neighbour_route(start, dry_nodes)
         dry_route_names = ' -> '.join([node.id for node in route])
         base_time = self.route_time(start, route)
@@ -168,7 +232,7 @@ class IrrigationRoutePlannerNode(Node):
     def publish_route(self, route):
         msg = PoseArray()
         msg.header.stamp = self.get_clock().now().to_msg()
-        msg.header.frame_id = str(self.get_parameter('frame_id').value)
+        msg.header.frame_id = self.frame_id
 
         for node in route:
             pose = Pose()
