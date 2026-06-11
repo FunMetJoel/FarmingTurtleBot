@@ -5,6 +5,7 @@ from rclpy.executors import ExternalShutdownException
 from rclpy.node import Node
 from geometry_msgs.msg import PoseArray, TwistStamped
 from nav_msgs.msg import Odometry
+from tb3_state_dt.mode_guard import ModeGuard
 
 
 class SimpleRouteFollowerNode(Node):
@@ -30,11 +31,13 @@ class SimpleRouteFollowerNode(Node):
         self.accepted_route = False
         self.last_announced_goal = -1
         self.stop_sent = False
+        self.mode_guard = ModeGuard(self)
 
         cmd_vel_topic = str(self.get_parameter('cmd_vel_topic').value)
 
+        self.create_subscription(Odometry, '/odom', self.real_odom_callback, 10)
+        self.create_subscription(Odometry, '/sim/odom', self.sim_odom_callback, 10)
         self.create_subscription(PoseArray, '/irrigation/route', self.route_callback, 10)
-        self.create_subscription(Odometry, '/odom', self.odom_callback, 10)
         self.cmd_publisher = self.create_publisher(TwistStamped, cmd_vel_topic, 10)
         self.timer = self.create_timer(0.1, self.drive_step)
 
@@ -149,6 +152,16 @@ class SimpleRouteFollowerNode(Node):
         if value >= 0.0:
             return 1.0
         return -1.0
+    
+    def real_odom_callback(self, msg):
+        if self.mode_guard.is_simulating():
+            return
+        self.odom_callback(msg)
+
+    def sim_odom_callback(self, msg):
+        if not self.mode_guard.is_simulating():
+            return
+        self.odom_callback(msg)
 
 
 def main(args=None):
