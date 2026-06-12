@@ -13,11 +13,14 @@ class RobWaterLevel(Node):
     def __init__(self):
         super().__init__('rob_water_level')
 
+        self.declare_parameter('initial_water_level', 1.0)
+
         # The water level is a percentage, represented by a floating
         # point number between zero and one.
-        # We start it up here as a random percentage. This would correspond
-        # to the actual robot having some remaining water in its tank at startup.
-        self.water_level = random.random()
+        self.water_level = float(
+            self.get_parameter('initial_water_level').value
+        )
+        self.water_level = min(max(self.water_level, 0.0), 1.0)
         self.get_logger().info(f'started, now at {self.water_level:.4f}')
 
         # The water level is published to a topic periodically.
@@ -102,6 +105,5 @@ def main(args=None):
 
 if __name__ == '__main__':
     main()
-
 
 
