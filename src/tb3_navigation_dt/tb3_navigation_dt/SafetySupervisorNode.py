@@ -156,6 +156,7 @@ class SafetySupervisorNode(Node):
         blocked_back = self.real_blocked_back or self.sim_blocked_back
         blocked = (blocked_front and forward_requested) or (blocked_back and backward_requested)
 
+            
         self.get_logger().info(
             f"real_blocked_front={self.real_blocked_front} sim_blocked_front={self.sim_blocked_front} "
             f"real_min_front={self.real_min_distance_front:.2f} sim_min_front={self.sim_min_distance_front:.2f} "

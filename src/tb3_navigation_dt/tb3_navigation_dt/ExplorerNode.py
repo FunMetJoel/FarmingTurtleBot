@@ -149,7 +149,7 @@ class Explorer(SimpleNavigator):
         for point in self.points:
             if point in self.visitedWaypoints:
                 continue
-            distance = (2 * (pos[0] - point[0]) ** 2) + ((pos[1] - point[1]) ** 2)
+            distance = ((pos[0] - point[0]) ** 2) +  (3 * ((pos[1] - point[1]) ** 2))
             if distance < leastDistance:
                 currentClosest = point
                 leastDistance = distance

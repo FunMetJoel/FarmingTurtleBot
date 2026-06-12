@@ -78,8 +78,6 @@ def _generate_low_res_occupancy_grid(occupancy_map_msg, cell_size):
             row_min = max(0, int(np.floor((y_min - orgY) / res)))
             row_max = min(h - 1, int(np.ceil((y_max - orgY) / res)))
 
-            print(i, j, x_min, x_max, y_min, y_max)
-
             if np.any(grid[row_min:row_max+1, col_min:col_max+1] > 0):
                 low_res_grid[i, j] = True
 
