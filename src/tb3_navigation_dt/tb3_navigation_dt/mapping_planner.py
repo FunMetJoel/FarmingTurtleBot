@@ -29,14 +29,15 @@ def generate_mapping_waypoints(occupancy_map_msg, humidity_map_msg):
                 # check of this coordinate x y is reachable using the reachable_grid
                 grid_x = round((x - occupancy_map_msg.info.origin.position.x) / occupancy_map_msg.info.resolution)
                 grid_y = round((y - occupancy_map_msg.info.origin.position.y) / occupancy_map_msg.info.resolution)
-                if not (0 <= grid_x < reachable_grid.shape[0] and 0 <= grid_y < reachable_grid.shape[1]):
+                
+                if not (0 <= grid_x < reachable_grid.shape[1] and 0 <= grid_y < reachable_grid.shape[0]):
                     continue
-                if not reachable_grid[grid_x, grid_y]:
+                if not reachable_grid[grid_y, grid_x]:
                     continue
 
                 waypoints.append((x, y))
 
-    return waypoints, _toOccupancyGridData(low_res_occupancy_grid, 0, 1)
+    return waypoints
 
 
 def _generate_low_res_occupancy_grid(occupancy_map_msg, cell_size):
@@ -51,26 +52,33 @@ def _generate_low_res_occupancy_grid(occupancy_map_msg, cell_size):
     h = occupancy_map_msg.info.height
     w = occupancy_map_msg.info.width
     res = occupancy_map_msg.info.resolution # m/cell
-    ox = occupancy_map_msg.info.origin.position.x
-    oy = occupancy_map_msg.info.origin.position.y
+    ox = math.floor(occupancy_map_msg.info.origin.position.x * (1/cell_size)) * cell_size
+    oy = math.floor(occupancy_map_msg.info.origin.position.y * (1/cell_size)) * cell_size
+
+    orgX = occupancy_map_msg.info.origin.position.x
+    orgY = occupancy_map_msg.info.origin.position.y
 
     grid = np.array(occupancy_map_msg.data, dtype=np.int8).reshape(h, w)
 
-    low_res_h = int(np.floor((h * res) / cell_size))
-    low_res_w = int(np.floor((w * res) / cell_size))
+    low_res_h = int(np.ceil((h * res) / cell_size))
+    low_res_w = int(np.ceil((w * res) / cell_size))
     low_res_grid = np.zeros((low_res_h, low_res_w), dtype=bool)
+
 
     for i in range(low_res_h):
         for j in range(low_res_w):
-            x_min = ox + j * cell_size - cell_size / 2
-            x_max = ox + j * cell_size + cell_size / 2
-            y_min = oy + i * cell_size - cell_size / 2
-            y_max = oy + i * cell_size + cell_size / 2
+            
+            x_min = ox + j * cell_size - cell_size / 3
+            x_max = ox + j * cell_size + cell_size / 3
+            y_min = oy + i * cell_size - cell_size / 3
+            y_max = oy + i * cell_size + cell_size / 3
 
-            col_min = max(0, int(np.floor((x_min - ox) / res)))
-            col_max = min(w - 1, int(np.ceil((x_max - ox) / res)))
-            row_min = max(0, int(np.floor((y_min - oy) / res)))
-            row_max = min(h - 1, int(np.ceil((y_max - oy) / res)))
+            col_min = max(0, int(np.floor((x_min - orgX) / res)))
+            col_max = min(w - 1, int(np.ceil((x_max - orgX) / res)))
+            row_min = max(0, int(np.floor((y_min - orgY) / res)))
+            row_max = min(h - 1, int(np.ceil((y_max - orgY) / res)))
+
+            print(i, j, x_min, x_max, y_min, y_max)
 
             if np.any(grid[row_min:row_max+1, col_min:col_max+1] > 0):
                 low_res_grid[i, j] = True

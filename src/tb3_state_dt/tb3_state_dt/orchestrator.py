@@ -16,9 +16,6 @@ from custom_interfaces.action import DockRobot, MapField, DiscoverField
 from tb3_state_dt.enums import SystemMode
 from action_msgs.msg import GoalStatus
 
-
-
-
 '''
           DISCOVER
           ↓
@@ -69,7 +66,13 @@ class OrchestratorNode(Node):
                 return
 
             case SystemMode.MAP:
-                # TODO: Startup mapping action
+                self._map_action_client.wait_for_server()
+                goal_msg = MapField.Goal()
+                self._map_action_client.send_goal_async(
+                    goal_msg,
+                    # feedback_callback=self.feedback_callback
+                ).add_done_callback(self._onStartMapping)
+                
                 return
             
             case SystemMode.IDLE:
@@ -101,6 +104,17 @@ class OrchestratorNode(Node):
 
         get_result_future = goal_handle.get_result_async()
         get_result_future.add_done_callback(self.onDoneDiscovering)
+
+    def _onStartMapping(self, future):
+        goal_handle = future.result()
+        
+        if not goal_handle.accepted:
+            self.get_logger().info('Goal rejected by the action server')
+            return
+
+        get_result_future = goal_handle.get_result_async()
+        get_result_future.add_done_callback(self.onDoneMapping)
+
 
     def onDoneDiscovering(self, future):
         status = future.result().status

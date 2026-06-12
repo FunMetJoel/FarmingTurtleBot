@@ -14,7 +14,8 @@ from rclpy.executors import MultiThreadedExecutor
 from std_msgs.msg import Float64, Header
 import math
 import matplotlib.pyplot as plt
-
+from custom_interfaces.action import MapField
+from rclpy.action import ActionServer
 
 
 class Explorer(SimpleNavigator):
@@ -43,32 +44,49 @@ class Explorer(SimpleNavigator):
             10
         )
 
-        self.lowResMapPublisher = self.create_publisher(
-            Path,
-            '/lowResMap',
-            10
+        self._actionServer = ActionServer(
+            self,
+            MapField,
+            '/map_field',
+            self._handle_mapField,
         )
 
         self.visitedWaypoints = set([])
         self.currGoal = None
 
+    def _handle_mapField(self, goal_handle):
+        self.get_logger().info("Started")
+        self._start()
+        self.goal_handle = goal_handle
+
+        rate = self.create_rate(1)
+        while rclpy.ok() and self.goal_handle.is_active:
+
+            if (self.humidity_map_msg is None or self.map_msg is None):
+                self.get_logger().info("Waiting on map")
+
+            # TODO: Determine when finished
+            
+            rate.sleep()
+
+        result = MapField.Result()
+
+        if True: # TODO: determine when finished
+            goal_handle.succeed()
+        else:
+            goal_handle.abort()
+            
+        return result
+
     def map_callback(self, msg: OccupancyGrid):
         self.get_logger().debug('Received new map data, generating waypoints...')
         self.map_msg = msg
         if self.humidity_map_msg is not None:
-            self.points, map = generate_mapping_waypoints(self.map_msg, self.humidity_map_msg)
-            # # plt.figure(figsize=(10, 10))
-            # plt.imshow(map, cmap='gray', origin='lower')
-            # # plt.colorbar(label='Reachable')
-            # # plt.title('LOWRES')
-            # # plt.xlabel('Column')
-            # # plt.ylabel('Row')
-            # plt.savefig('REAC.png', dpi=150, bbox_inches='tight')
-            # plt.close()
+            self.points = generate_mapping_waypoints(self.map_msg, self.humidity_map_msg)
             if not self.points:
                 self.get_logger().warn('No free space found in the map to generate waypoints.')
             else:
-                self.get_logger().info(f'Generated {len(self.points)} waypoints.')
+                self.get_logger().debug(f'Generated {len(self.points)} waypoints.')
             
             header = Header()
             header.frame_id = 'map'
@@ -95,8 +113,14 @@ class Explorer(SimpleNavigator):
     def humidity_map_callback(self, msg: OccupancyGrid):
         self.humidity_map_msg = msg
         
-    def start(self):
-        self.send_goal(0, 0)
+    def _start(self):
+        self.get_logger().warn("STHART>??")
+        self.currGoal = self.getNextGoal()
+        if self.currGoal is None:
+            self.send_goal(0, 0)
+        else:
+            self.send_goal(*self.currGoal)
+        
 
     def get_result_callback(self, future):
         result = future.result().result
@@ -108,7 +132,10 @@ class Explorer(SimpleNavigator):
         else:
             self.get_logger().warn(f'Failed to reach point {self.currGoal} with status code: {status}')
 
+        self.get_logger().info(f'Visited {len(self.visitedWaypoints)} waypoints, {len([x for x in self.points if x not in self.visitedWaypoints])} to go.')
+        
         goal = self.getNextGoal()
+        self.get_logger().info("Calculated Goal")
         if goal is None:
             pass
         else:
@@ -118,7 +145,7 @@ class Explorer(SimpleNavigator):
     def getNextGoal(self):
         pos = self.getRobotPos()
         leastDistance = math.inf
-        currentClosest = (None)
+        currentClosest = None
         for point in self.points:
             if point in self.visitedWaypoints:
                 continue
@@ -132,7 +159,6 @@ class Explorer(SimpleNavigator):
 def main():
     rclpy.init()
     node = Explorer()
-    node.start()
     executor = MultiThreadedExecutor()
     rclpy.spin(node, executor=executor)
     node.destroy_node()
