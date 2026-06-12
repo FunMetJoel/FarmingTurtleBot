@@ -38,6 +38,7 @@ def generate_launch_description():
         ),
         launch_arguments={
             'gz_args': ['-r -v2 ', world_path],
+            'use_sim_time': use_sim_time,
         }.items()
     )
 
@@ -48,7 +49,7 @@ def generate_launch_description():
 
     spawn_turtlebot_cmd = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(os.path.join(launch_file_dir, 'spawn_turtlebot3.launch.py')),
-        launch_arguments={'-topic': '/sim/robot_description', '-name': 'turtlebot3', 'x_pose': '0', 'y_pose': '0'}.items()
+        launch_arguments={'-topic': '/sim/robot_description', '-name': 'turtlebot3', 'x_pose': '0', 'y_pose': '0', 'use_sim_time': use_sim_time}.items()
     )
 
     

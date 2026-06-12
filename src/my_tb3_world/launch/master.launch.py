@@ -18,6 +18,8 @@ def generate_launch_description():
     use_sim_time_arg = DeclareLaunchArgument('use_sim_time', default_value='true')
 
     return LaunchDescription([
+        use_sim_time_arg,
+
         IncludeLaunchDescription(
             PythonLaunchDescriptionSource(
                 os.path.join(dashboard_dir, 'launch', 'main.launch.py')
@@ -57,8 +59,6 @@ def generate_launch_description():
                 'use_rviz': 'False'
             }.items()
         ),
-
-        use_sim_time_arg
     ])
 
 
