@@ -88,6 +88,7 @@ def generate_launch_description():
     )
 
     # Weather context for digital twin
+    """
     weather_adapter = Node(
         package='tb3_weather_dt',
         executable='weather_adapter',
@@ -100,11 +101,12 @@ def generate_launch_description():
         name='twin_safety_supervisor',
         output='screen',
     )
+    """
 
     # Safety supervisor
     safety_supervisor = Node(
         package='tb3_navigation_dt',
-        executable='SafetySupervisorNode',
+        executable='safetySupervisorNode',
         name='SafetySupervisorNode',
         output='screen',
     )
