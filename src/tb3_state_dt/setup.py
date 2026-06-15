@@ -33,7 +33,8 @@ setup(
             'sim_battery_level = tb3_state_dt.sim_battery_level:main',
             'rob_state = tb3_state_dt.rob_state:main',
             'sim_state = tb3_state_dt.sim_state:main',
-            'orchestrator = tb3_state_dt.orchestrator:main'
+            'orchestrator = tb3_state_dt.orchestrator:main',
+            'sound_controller = tb3_state_dt.sound_controller:main'
         ],
     },
 )

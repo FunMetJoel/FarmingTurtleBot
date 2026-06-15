@@ -52,6 +52,13 @@ def generate_launch_description():
             output='screen',
             parameters=[{'use_sim_time': use_sim_time}],
         ),
+        Node(
+            package='tb3_state_dt',
+            executable='sound_controller',
+            name='sound_controller',
+            output='screen',
+            parameters=[{'use_sim_time': use_sim_time}],
+        ),
         IncludeLaunchDescription(
             PythonLaunchDescriptionSource(
                 os.path.join(this_dir, 'gazebo_twin.launch.py')
