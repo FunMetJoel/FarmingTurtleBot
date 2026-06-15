@@ -16,7 +16,7 @@ class SafetySupervisorNode(Node):
         self.declare_parameter('input_cmd_topic', '/cmd_vel_raw')
         self.declare_parameter('real_cmd_topic', '/cmd_vel')
         self.declare_parameter('sim_cmd_topic', '/sim/cmd_vel')
-        self.declare_parameter('stop_distance', 0.35)
+        self.declare_parameter('stop_distance', 0.30)
         self.declare_parameter('front_angle_deg', 30.0)
 
         self.real_scan_topic = self.get_parameter('real_scan_topic').value
@@ -157,13 +157,13 @@ class SafetySupervisorNode(Node):
         blocked = (blocked_front and forward_requested) or (blocked_back and backward_requested)
 
             
-        self.get_logger().info(
-            f"real_blocked_front={self.real_blocked_front} sim_blocked_front={self.sim_blocked_front} "
-            f"real_min_front={self.real_min_distance_front:.2f} sim_min_front={self.sim_min_distance_front:.2f} "
-            f"real_blocked_back={self.real_blocked_back} sim_blocked_back={self.sim_blocked_back} "
-            f"real_min_back={self.real_min_distance_back:.2f} sim_min_back={self.sim_min_distance_back:.2f} "
-            f"lin.x={msg.twist.linear.x:.2f} ang.z={msg.twist.angular.z:.2f}"
-        )
+        # self.get_logger().info(
+        #     f"real_blocked_front={self.real_blocked_front} sim_blocked_front={self.sim_blocked_front} "
+        #     f"real_min_front={self.real_min_distance_front:.2f} sim_min_front={self.sim_min_distance_front:.2f} "
+        #     f"real_blocked_back={self.real_blocked_back} sim_blocked_back={self.sim_blocked_back} "
+        #     f"real_min_back={self.real_min_distance_back:.2f} sim_min_back={self.sim_min_distance_back:.2f} "
+        #     f"lin.x={msg.twist.linear.x:.2f} ang.z={msg.twist.angular.z:.2f}"
+        # )
 
         if blocked:
             safe.twist.linear.x = 0.0

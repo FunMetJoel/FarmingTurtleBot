@@ -5,8 +5,8 @@ import rclpy
 from rclpy.executors import ExternalShutdownException
 from rclpy.node import Node
 from rclpy.time import Time
-from geometry_msgs.msg import Pose, PoseArray, Point, Quaternion
-from nav_msgs.msg import OccupancyGrid
+from geometry_msgs.msg import Pose, PoseArray, Point, Quaternion, PoseStamped
+from nav_msgs.msg import OccupancyGrid, Path
 from std_msgs.msg import String
 from tf2_ros import Buffer, TransformException, TransformListener
 
@@ -66,7 +66,7 @@ class IrrigationRoutePlannerNode(Node):
         self.tf_buffer = Buffer()
         self.tf_listener = TransformListener(self.tf_buffer, self)
 
-        self.route_publisher = self.create_publisher(PoseArray, '/irrigation/route', 10)
+        self.route_publisher = self.create_publisher(Path, '/irrigation/route', 10)
         self.debug_publisher = self.create_publisher(String, '/irrigation/route_debug', 10)
         self.create_subscription(
             OccupancyGrid,
@@ -230,14 +230,16 @@ class IrrigationRoutePlannerNode(Node):
         return total_time
 
     def publish_route(self, route):
-        msg = PoseArray()
+        msg = Path()
         msg.header.stamp = self.get_clock().now().to_msg()
         msg.header.frame_id = self.frame_id
 
         for node in route:
-            pose = Pose()
-            pose.position = Point(x=node.x, y=node.y, z=0.0)
-            pose.orientation = Quaternion(x=0.0, y=0.0, z=0.0, w=1.0)
+            pose = PoseStamped()
+            pose.header.frame_id = 'map'
+            pose.header.stamp = self.get_clock().now().to_msg()
+            pose.pose.position = Point(x=node.x, y=node.y, z=0.0)
+            pose.pose.orientation = Quaternion(x=0.0, y=0.0, z=0.0, w=1.0)
             msg.poses.append(pose)
 
         self.route_publisher.publish(msg)
