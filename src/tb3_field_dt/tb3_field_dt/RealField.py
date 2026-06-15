@@ -10,20 +10,23 @@ class RealField:
         self.mapSize = (25.0, 25.0)  # Size of the field in meters
         self.origin = (-12.5, -12.5)  # Origin of the field
 
-        # add 2D sign wave pattern to the map
-        for i in range(self.map.shape[0]):
-            for j in range(self.map.shape[1]):
-                self.map[i, j] += 0.5 * (np.sin(i / 3.0) + np.cos(j / 3.0)) - 2
-
         # add some random noise to the decay map
         self.humidity_decay_rate += 0.0005 * np.random.rand(*self.humidity_decay_rate.shape) - 0.00025
+
+        # Seed immediately visible wet and dry regions for the demo.
+        now = time.time()
+        for i in range(self.map.shape[0]):
+            for j in range(self.map.shape[1]):
+                pattern = 0.5 * (np.sin(i / 3.0) + np.cos(j / 3.0))
+                humidity = np.clip(0.55 + 0.4 * pattern, 0.1, 0.95)
+                self.map[i, j] = now - (1.0 - humidity) / self.humidity_decay_rate[i, j]
 
 
     def _get_pixel_position(self, x, y):
         pixel_x = int((x - self.origin[0]) / self.mapSize[0] * self.map.shape[1])
         pixel_y = int((y - self.origin[1]) / self.mapSize[1] * self.map.shape[0])
         return pixel_x, pixel_y
-    
+
     def get_humidity_at(self, x, y):
         currTime = time.time()
         pixel_x, pixel_y = self._get_pixel_position(x, y)
@@ -47,7 +50,3 @@ if __name__ == "__main__":
 
         plt.imshow(mapToVisualize, extent=(0, field.mapSize[0], 0, field.mapSize[1]), origin='lower')
         plt.show()
-
-
-    
-    
