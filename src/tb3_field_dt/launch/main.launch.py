@@ -35,5 +35,12 @@ def generate_launch_description():
             output='screen',
             parameters=[{'use_sim_time': use_sim_time}],
         ),
+        Node(
+            package='tb3_field_dt',
+            executable='irrigationController',
+            name='irrigationController',
+            output='screen',
+            parameters=[{'use_sim_time': use_sim_time}],
+        ),
     ])
 

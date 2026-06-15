@@ -6,6 +6,8 @@ from nav_msgs.msg import OccupancyGrid, Path
 from rclpy.executors import MultiThreadedExecutor
 from tb3_navigation_dt.simpleNavigator import SimpleNavigator
 from tf2_ros import Buffer, TransformListener
+from std_msgs.msg import Bool
+import time
 
 
 
@@ -20,6 +22,12 @@ class Nav2IrrigationRouteFollowerNode(SimpleNavigator):
         self.current_goal_index = 0
         self.pause_until = None
         self.route_finished = False
+
+        self.irrigating_publisher = self.create_publisher(
+            Bool,
+            '/irrigating',
+            10
+        )
 
     def route_callback(self, msg):
         self.get_logger().info("Route callback")
@@ -51,13 +59,21 @@ class Nav2IrrigationRouteFollowerNode(SimpleNavigator):
         
         if status == 4: # TaskResult.SUCCEEDED
             self.get_logger().info(f'Point {self.route[self.current_goal_index]} reached successfully!')
-            self.current_goal_index = (self.current_goal_index + 1) % len(self.route)
-            self.send_goal(*self.route[self.current_goal_index])
+            self.publish_irrigating(True)
+            time.sleep(5)
+            self.publish_irrigating(False)
+            
         else:
             self.get_logger().info(f'Failed to reach point {self.route[self.current_goal_index]} with status code: {status}')
 
+        self.current_goal_index = (self.current_goal_index + 1) % len(self.route)
+        self.send_goal(*self.route[self.current_goal_index])
+
     def start(self):
         self.send_goal(*self.route[self.current_goal_index])
+
+    def publish_irrigating(self, irrigating):
+        self.irrigating_publisher.publish(Bool(data=irrigating))
 
 
 def main():

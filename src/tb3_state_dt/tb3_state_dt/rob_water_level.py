@@ -95,8 +95,8 @@ class RobWaterLevel(Node):
 
         usedAmount = max(amount, self.water_level)
         new_msg = Float64()
-        new_msg.data = usedAmount
-        self.water_field_publisher.publish(usedAmount)
+        new_msg.data = usedAmount * 20
+        self.water_field_publisher.publish(new_msg)
 
         self.get_logger().info(f"used {amount:.4f} for irrigation, now at {self.water_level:.4f}")
 

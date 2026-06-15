@@ -35,7 +35,8 @@ setup(
             'irrigationRoutePlanner = tb3_field_dt.IrrigationRoutePlannerNode:main',
             'simpleRouteFollower = tb3_field_dt.SimpleRouteFollowerNode:main',
             'fieldHumiditySensor = tb3_field_dt.FieldHumiditySensorNode:main',
-            'Nav2IrrigationRouteFollower = tb3_field_dt.Nav2IrrigationRouteFollowerNode:main'
+            'Nav2IrrigationRouteFollower = tb3_field_dt.Nav2IrrigationRouteFollowerNode:main',
+            'irrigationController = tb3_field_dt.IrrigationControllerNode:main'
         ],
     },
 )
