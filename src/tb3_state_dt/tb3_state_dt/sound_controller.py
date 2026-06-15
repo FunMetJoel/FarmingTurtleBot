@@ -29,7 +29,8 @@ class SoundController(Node):
         if msg.data is True:
             self.get_logger().info("sending sound")
             req = Sound.Request()
-            req.value = 1 # 'ON' sound, we should pick a sound in the lab
+            req.value = 0 # 'ON' sound, we should pick a sound in the lab
+            self.sound_client.call_async(req)
 
         
 def main(args=None):
