@@ -1,7 +1,7 @@
 from launch import LaunchDescription
 from launch_ros.actions import Node
 
-
+# offline demo — no robot or sim needed, dummy_publisher fakes all topics
 def generate_launch_description():
     return LaunchDescription([
         Node(
