@@ -40,6 +40,11 @@ class RobWaterLevel(Node):
             self.simulate_irrigating,
             cmd_qos
         )
+        self.water_field_publisher = self.create_publisher(
+            Float64,
+            "/water",
+            cmd_qos
+        )
 
         # Initiate the timers for repeating tasks.
         self.timer1 = self.create_timer(1.0, self.periodic_publish)
@@ -87,6 +92,11 @@ class RobWaterLevel(Node):
         if (self.water_level < 0.0):
             self.get_logger().warning(f"dispensed more water than available")
             self.water_level = 0.0
+
+        usedAmount = max(amount, self.water_level)
+        new_msg = Float64()
+        new_msg.data = usedAmount
+        self.water_field_publisher.publish(usedAmount)
 
         self.get_logger().info(f"used {amount:.4f} for irrigation, now at {self.water_level:.4f}")
 
