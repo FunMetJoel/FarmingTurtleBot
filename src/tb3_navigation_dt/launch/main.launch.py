@@ -44,7 +44,7 @@ def generate_launch_description():
 
         Node(
             package='tb3_navigation_dt',
-            executable='SafetySupervisorNode',
+            executable='safetySupervisorNode',
             name='SafetySupervisorNode',
         ),
 
