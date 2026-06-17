@@ -154,6 +154,9 @@ class SafetySupervisorNode(Node):
 
         forward_requested = msg.twist.linear.x > 0.0
         backward_requested = msg.twist.linear.x < 0.0
+        self.get_logger().info(
+            f"Current mode before publishing: {self.mode_guard.mode.name}"
+        )
         if self.mode_guard.is_simulating():
             blocked_front = self.sim_blocked_front
             blocked_back = self.sim_blocked_back
