@@ -9,6 +9,7 @@ from geometry_msgs.msg import Pose, PoseArray, Point, Quaternion, PoseStamped
 from nav_msgs.msg import OccupancyGrid, Path
 from std_msgs.msg import String
 from tf2_ros import Buffer, TransformException, TransformListener
+from tb3_state_dt.mode_guard import ModeGuard
 
 
 @dataclass
@@ -246,6 +247,16 @@ class IrrigationRoutePlannerNode(Node):
 
     def distance(self, a, b):
         return math.sqrt((a[0] - b[0]) ** 2 + (a[1] - b[1]) ** 2)
+    
+    def real_odom_callback(self, msg):
+        if self.mode_guard.is_simulating():
+            return
+        self.odom_callback(msg)
+
+    def sim_odom_callback(self, msg):
+        if not self.mode_guard.is_simulating():
+            return
+        self.odom_callback(msg)
 
 
 def main(args=None):

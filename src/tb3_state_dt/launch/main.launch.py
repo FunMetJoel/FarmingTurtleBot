@@ -19,6 +19,12 @@ def generate_launch_description():
         ),
         Node(
             package='tb3_state_dt',
+            executable='orchestrator',
+            name='orchestrator',
+            output='screen',
+        ),
+        Node(
+            package='tb3_state_dt',
             executable='rob_water_level',
             name='rob_water_level',
             output='screen',

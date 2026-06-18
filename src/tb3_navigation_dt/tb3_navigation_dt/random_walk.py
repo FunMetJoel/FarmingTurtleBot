@@ -3,18 +3,30 @@ from rclpy.node import Node
 from sensor_msgs.msg import LaserScan
 from geometry_msgs.msg import TwistStamped, Twist
 import math
+from tb3_state_dt.mode_guard import ModeGuard
 
 class RandomWalkNode(Node):
 
     def __init__(self):
         super().__init__('random_walk')
-        self.subscription = self.create_subscription(
+
+        self.mode_guard = ModeGuard(self)
+
+        self.real_scan_subscription = self.create_subscription(
             LaserScan,
             '/scan',
-            self.scan_callback,
-            10)
+            self.real_scan_callback,
+            10
+        )
+        
+        self.sim_scan_subscription = self.create_subscription(
+            LaserScan,
+            '/sim/scan',
+            self.sim_scan_callback,
+            10
+        )
+        
         self.publisher = self.create_publisher(TwistStamped, '/cmd_vel_raw', 10)
-
         self.movingFowardState = True
         self.startup = True
         self.direction = 0
@@ -73,6 +85,16 @@ class RandomWalkNode(Node):
         leftDistance = min(scanMsg.ranges[-45:-5])
         rightDistance = min(scanMsg.ranges[5:45])
         return rightDistance > leftDistance
+    
+    def real_scan_callback(self, msg):
+        if self.mode_guard.is_simulating():
+            return
+        self.scan_callback(msg)
+
+    def sim_scan_callback(self, msg):
+        if not self.mode_guard.is_simulating():
+            return
+        self.scan_callback(msg)
 
 def main(args=None):
     rclpy.init(args=args)

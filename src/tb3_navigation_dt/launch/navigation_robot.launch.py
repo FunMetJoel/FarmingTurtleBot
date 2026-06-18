@@ -1,10 +1,10 @@
 import os
 from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription
+from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription, GroupAction
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration
-from launch_ros.actions import Node
+from launch_ros.actions import Node, SetRemap
 
 
 def generate_launch_description():
@@ -23,7 +23,7 @@ def generate_launch_description():
     )
     use_sim_time = LaunchConfiguration('use_sim_time')
 
-    # SLAM — maps the real environment
+    # SLAM - maps the real environment
     slam = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
             os.path.join(nav2_bringup, 'launch', 'slam_launch.py')
@@ -35,14 +35,19 @@ def generate_launch_description():
     )
 
     # Nav2
-    navigation = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(
-            os.path.join(nav2_bringup, 'launch', 'navigation_launch.py')
-        ),
-        launch_arguments={
-            'use_sim_time': use_sim_time,
-            'params_file': tb3_nav2_params,
-        }.items()
+    navigation = GroupAction(
+        actions=[
+            SetRemap(src='/cmd_vel', dst='/cmd_vel_raw'),
+            IncludeLaunchDescription(
+                PythonLaunchDescriptionSource(
+                    os.path.join(nav2_bringup, 'launch', 'navigation_launch.py')
+                ),
+                launch_arguments={
+                    'use_sim_time': use_sim_time,
+                    'params_file': tb3_nav2_params,
+                }.items()
+            ),
+        ]
     )
 
     # Humidity pipeline
@@ -80,7 +85,7 @@ def generate_launch_description():
         output='screen',
     )
 
-    # Battery — reads from real /battery_state published by TurtleBot3
+    # Battery - reads from real /battery_state published by TurtleBot3
     sim_battery_level = Node(
         package='tb3_state_dt',
         executable='sim_battery_level',

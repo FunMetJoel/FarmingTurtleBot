@@ -5,6 +5,7 @@ from geometry_msgs.msg import TwistStamped, Twist
 import math
 from typing import List
 from rclpy.qos import QoSProfile, ReliabilityPolicy
+from tb3_state_dt.mode_guard import ModeGuard
 
 class SafetySupervisorNode(Node):
 
@@ -26,6 +27,7 @@ class SafetySupervisorNode(Node):
         self.sim_cmd_topic = self.get_parameter('sim_cmd_topic').value
         self.stop_distance = float(self.get_parameter('stop_distance').value)
         self.front_angle_deg = float(self.get_parameter('front_angle_deg').value)
+        self.mode_guard = ModeGuard(self)
 
         self.real_blocked_front = False
         self.real_blocked_back = False
@@ -152,8 +154,15 @@ class SafetySupervisorNode(Node):
 
         forward_requested = msg.twist.linear.x > 0.0
         backward_requested = msg.twist.linear.x < 0.0
-        blocked_front = self.real_blocked_front or self.sim_blocked_front
-        blocked_back = self.real_blocked_back or self.sim_blocked_back
+        self.get_logger().info(
+            f"Current mode before publishing: {self.mode_guard.mode.name}"
+        )
+        if self.mode_guard.is_simulating():
+            blocked_front = self.sim_blocked_front
+            blocked_back = self.sim_blocked_back
+        else:
+            blocked_front = self.real_blocked_front or self.sim_blocked_front
+            blocked_back = self.real_blocked_back or self.sim_blocked_back
         blocked = (blocked_front and forward_requested) or (blocked_back and backward_requested)
 
             
@@ -179,8 +188,11 @@ class SafetySupervisorNode(Node):
         else:
             safe = msg
 
-        self.real_pub.publish(safe)
-        self.sim_pub.publish(safe)
+        if self.mode_guard.is_simulating():
+            self.sim_pub.publish(safe)
+        else:
+            self.real_pub.publish(safe)
+            self.sim_pub.publish(safe)
 
 def main(args=None):
     rclpy.init(args=args)
