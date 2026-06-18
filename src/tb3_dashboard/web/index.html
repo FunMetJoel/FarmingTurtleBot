@@ -1,3 +1,4 @@
+<!-- Base structure and logic written by hand; AI used to refine styling and boilerplate. --
 <!doctype html>
 <html lang="en">
     <head>
@@ -81,7 +82,7 @@
                 background: var(--muted);
             }
 
-            /* ── Map ──────────────────────────────────────────────── */
+            /* Map */
             .map-section {
                 background: #0a0e14;
                 position: relative;
@@ -121,7 +122,7 @@
                 flex-shrink: 0;
             }
 
-            /* ── Right sidebar ────────────────────────────────────── */
+            /* Right sidebar */
             .sidebar {
                 background: var(--surface);
                 padding: 10px;
@@ -211,7 +212,7 @@
                 color: var(--orange);
             }
 
-            /* ── Bottom row ───────────────────────────────────────── */
+            /* Bottom row */
             .chart-section {
                 background: var(--surface);
                 padding: 10px 14px;
@@ -421,11 +422,11 @@
 
         <script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
         <script>
-            // ── Canvas setup ────────────────────────────────────────────────────────────
+            // === Canvas setup ===
             const canvas = document.getElementById("mapCanvas");
             const ctx = canvas.getContext("2d");
 
-            // ── State ───────────────────────────────────────────────────────────────────
+            // === State ===
             let mapMsg = null;
             let humidityMsg = null;
             let robotPose = null;
@@ -448,24 +449,36 @@
 
             let knownAlertCount = 0;
 
-            // ── Polling ─────────────────────────────────────────────────────────────────
+            // === Polling ===
             function poll() {
                 fetch("/api/state")
                     .then((r) => r.json())
                     .then((s) => {
                         setStatus("connected", "Connected");
 
-                        if (s.map)          { mapMsg      = s.map; }
-                        if (s.humidity_map) { humidityMsg = s.humidity_map; }
-                        if (s.robot_pose)   { robotPose   = s.robot_pose; }
-                        if (s.nav_path)     { navPath     = s.nav_path; }
+                        if (s.map) {
+                            mapMsg = s.map;
+                        }
+                        if (s.humidity_map) {
+                            humidityMsg = s.humidity_map;
+                        }
+                        if (s.robot_pose) {
+                            robotPose = s.robot_pose;
+                        }
+                        if (s.nav_path) {
+                            navPath = s.nav_path;
+                        }
 
-                        if (s.battery        !== null) updateBar("battery",  s.battery);
-                        if (s.water_level    !== null) updateBar("waterRem", s.water_level * 100);
-                        if (s.coverage_pct   !== null) updateBar("coverage", s.coverage_pct);
+                        if (s.battery !== null) updateBar("battery", s.battery);
+                        if (s.water_level !== null)
+                            updateBar("waterRem", s.water_level * 100);
+                        if (s.coverage_pct !== null)
+                            updateBar("coverage", s.coverage_pct);
 
                         if (s.water_saved_pct !== null) {
-                            document.getElementById("waterSavedPct").childNodes[0].textContent =
+                            document.getElementById(
+                                "waterSavedPct",
+                            ).childNodes[0].textContent =
                                 s.water_saved_pct.toFixed(1);
                         }
                         if (s.water_dt_liters !== null) {
@@ -478,12 +491,15 @@
                                 s.water_naive_liters.toFixed(2);
                             pushHistory("naive", s.water_naive_liters);
                         }
-                        if (s.rainy       !== null) updateWeather(s.rainy);
+                        if (s.rainy !== null) updateWeather(s.rainy);
                         if (s.speed_scale !== null) {
-                            document.getElementById("weatherSpeed").textContent =
+                            document.getElementById(
+                                "weatherSpeed",
+                            ).textContent =
                                 `Speed scale: ${(s.speed_scale * 100).toFixed(0)}%`;
                         }
-                        if (s.irrigating !== null) updateIrrigation(s.irrigating);
+                        if (s.irrigating !== null)
+                            updateIrrigation(s.irrigating);
 
                         updateAlerts(s.alerts || []);
                         drawMap();
@@ -494,7 +510,7 @@
             setInterval(poll, 1000);
             poll();
 
-            // ── UI helpers ───────────────────────────────────────────────────────────────
+            // === UI helpers ===
             function setStatus(cls, text) {
                 document.getElementById("statusDot").className =
                     "status-dot " + cls;
@@ -549,7 +565,7 @@
                 while (list.children.length > 30) list.lastChild.remove();
             }
 
-            // ── Water chart ──────────────────────────────────────────────────────────────
+            // === Water chart ===
             const waterChart = new Chart(
                 document.getElementById("waterChart"),
                 {
@@ -558,7 +574,7 @@
                         labels: [],
                         datasets: [
                             {
-                                label: "DNSBot(smart)",
+                                label: "DNSBot (smart)",
                                 data: [],
                                 borderColor: "#58a6ff",
                                 backgroundColor: "rgba(88,166,255,0.1)",
@@ -623,7 +639,7 @@
                 waterChart.update("none");
             }
 
-            // ── Map rendering ────────────────────────────────────────────────────────────
+            // === Map rendering ===
             function toInt8(v) {
                 return v > 127 ? v - 256 : v;
             }
@@ -671,6 +687,7 @@
                 tctx.putImageData(img, 0, 0);
 
                 ctx.save();
+                // ROS map origin is bottom-left; canvas is top-left, so flip Y
                 ctx.translate(mapOffX, mapOffY + drawH);
                 ctx.scale(mapScale, -mapScale);
                 ctx.imageSmoothingEnabled = false;
