@@ -65,6 +65,7 @@ class SimpleNavigator(Node):
         )
         
         self._send_goal_future.add_done_callback(self.goal_response_callback)
+        self.get_logger().info("Goal send successfully")
 
     def goal_response_callback(self, future):
         goal_handle = future.result()

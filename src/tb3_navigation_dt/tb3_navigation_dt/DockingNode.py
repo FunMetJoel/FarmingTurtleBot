@@ -9,6 +9,7 @@ from tf2_ros import Buffer, TransformListener
 from geometry_msgs.msg import PoseStamped
 from rclpy.executors import MultiThreadedExecutor
 from rclpy.action import ActionServer
+from std_msgs.msg import Float64
 
 from custom_interfaces.action import DockRobot
 
@@ -25,8 +26,22 @@ class DockingNode(SimpleNavigator):
             self._handle_dock,
         )
 
+        self._publisher = self.create_publisher(
+            Float64,
+            '/cmd_water_fill',
+            10
+        )
+
+        self.create_client(
+            Float64,
+            'rob_water_level',
+            self.water_level_callback,
+            10
+        )
+
         self.goal_handle = None
         self.nav_success = False
+        self.water_tank_level = 0
 
     def _start(self):
         self.send_goal(*self.dockPos)
@@ -52,6 +67,14 @@ class DockingNode(SimpleNavigator):
                 break
             rate.sleep()
 
+        while rclpy.ok():
+            msg = Float64()
+            msg.data = 0.01
+            self._publisher.publish(msg)
+
+            if self.water_tank_level > 1.0:
+                break
+
         result = DockRobot.Result()
 
         if self.nav_success:
@@ -70,6 +93,9 @@ class DockingNode(SimpleNavigator):
         new_feedback_msg = DockRobot.Feedback()
         new_feedback_msg.distance_to_goal = feedback.distance_remaining
         self.goal_handle.publish_feedback(new_feedback_msg)
+
+    def water_level_callback(self, msg):
+        self.water_tank_level = msg.data
 
 
 

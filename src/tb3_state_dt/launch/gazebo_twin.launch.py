@@ -44,7 +44,7 @@ def generate_launch_description():
 
     robot_state_publisher_cmd = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(os.path.join(launch_file_dir, 'robot_state_publisher.launch.py')),
-        launch_arguments={'use_sim_time': use_sim_time}.items()
+        launch_arguments={'use_sim_time': use_sim_time, 'frame_prefix': 'twin/' }.items()
     )
 
     spawn_turtlebot_cmd = IncludeLaunchDescription(

@@ -14,7 +14,7 @@ import matplotlib.pyplot as plt
 import heapq
 
 NAVIGATIONFAILURELIMIT = 5
-MAX_COST_THRESHOLD = 10000
+MAX_COST_THRESHOLD = 100
 
 class DiscovererNode(SimpleNavigator):
     
@@ -40,8 +40,9 @@ class DiscovererNode(SimpleNavigator):
         self.failedToNavigateCounter = 0
 
     def _handle_discoverField(self, goal_handle):
-        self._start()
+        self.send_goal(1.0, 0.0)
         self.goal_handle = goal_handle
+        
 
         rate = self.create_rate(0.2)
         while rclpy.ok() and self.goal_handle.is_active:
@@ -92,7 +93,7 @@ class DiscovererNode(SimpleNavigator):
         return result
     
     def _start(self):
-        self.send_goal(*self.frontier)
+        self.send_goal(1.0, 0)
         return
     
     def _map_callback(self, msg: OccupancyGrid):
@@ -151,6 +152,7 @@ class DiscovererNode(SimpleNavigator):
 def main():
     rclpy.init()
     node = DiscovererNode()
+    node._start()
     executor = MultiThreadedExecutor()
     rclpy.spin(node, executor=executor)
     node.destroy_node()

@@ -49,6 +49,27 @@ def generate_launch_description():
             parameters=[{'use_sim_time': use_sim_time}],
         ),
 
+        Node(
+            package='tb3_navigation_dt',
+            executable='discovererNode',
+            name='discovererNode',
+            parameters=[{'use_sim_time': use_sim_time}],
+        ),
+
+        Node(
+            package='tb3_navigation_dt',
+            executable='explorerNode',
+            name='explorerNode',
+            parameters=[{'use_sim_time': use_sim_time}],
+        ),
+
+        Node(
+            package='tb3_navigation_dt',
+            executable='dockingNode',
+            name='dockingNode',
+            parameters=[{'use_sim_time': use_sim_time}],
+        ),
+
         use_sim_time_arg
     ])
 
