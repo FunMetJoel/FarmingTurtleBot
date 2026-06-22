@@ -12,6 +12,7 @@
   <exec_depend>nav_msgs</exec_depend>
   <exec_depend>geometry_msgs</exec_depend>
   <exec_depend>tf2_ros</exec_depend>
+  <exec_depend>tb3_state_dt</exec_depend>
   <export>
     <build_type>ament_python</build_type>
   </export>
