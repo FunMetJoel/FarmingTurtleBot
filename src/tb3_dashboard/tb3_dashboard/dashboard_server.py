@@ -6,14 +6,15 @@ from http.server import BaseHTTPRequestHandler, HTTPServer
 import rclpy
 import rclpy.time
 from rclpy.node import Node
-from rclpy.qos import QoSProfile, ReliabilityPolicy
+from rclpy.qos import QoSProfile, ReliabilityPolicy, DurabilityPolicy, HistoryPolicy
 from ament_index_python.packages import get_package_share_directory
 
-from std_msgs.msg import Float32, Float64, Bool, String
+from std_msgs.msg import Float32, Float64, Bool, String, Int32
 from nav_msgs.msg import OccupancyGrid, Path
 from geometry_msgs.msg import PoseStamped
 from sensor_msgs.msg import BatteryState
 import tf2_ros
+from tb3_state_dt.enums import SystemMode
 
 
 class DashboardServerNode(Node):
@@ -43,6 +44,9 @@ class DashboardServerNode(Node):
             'rainy':             None,
             'speed_scale':       None,
             'alerts':            [],
+            "mode_value": None,
+            "mode_name": None,
+            "mode_label": "Unknown",
             'irrigating':        None,
         }
 
@@ -53,6 +57,11 @@ class DashboardServerNode(Node):
         self._pose_fallback = None  # from /dashboard/robot_pose (dummy mode)
 
         sensor_qos = QoSProfile(depth=10, reliability=ReliabilityPolicy.BEST_EFFORT)
+        mode_qos = QoSProfile(
+            depth=1,
+            history=HistoryPolicy.KEEP_LAST,
+            durability=DurabilityPolicy.TRANSIENT_LOCAL,
+        )
 
         self.create_subscription(OccupancyGrid, '/map',          self._on_map,          10)
         self.create_subscription(OccupancyGrid, '/humidityMap',  self._on_humidity_map, 10)
@@ -65,6 +74,7 @@ class DashboardServerNode(Node):
         self.create_subscription(Bool,          '/irrigating',   self._on_irrigating,   10)
         # Fallback pose used by dummy_publisher (no TF in that mode)
         self.create_subscription(PoseStamped,   '/dashboard/robot_pose', self._on_pose_fallback, 10)
+        self.create_subscription(Int32, "/mode", self._on_mode, mode_qos)
 
         self._tf_buffer   = tf2_ros.Buffer()
         self._tf_listener = tf2_ros.TransformListener(self._tf_buffer, self)
@@ -194,6 +204,15 @@ class DashboardServerNode(Node):
             }
             with self._lock:
                 self._state['robot_pose'] = pose
+    def _on_mode(self, msg):
+        try:
+            mode = SystemMode(msg.data)
+            with self._lock:
+                self._state["mode_value"] = mode.value
+                self._state["mode_name"] = mode.name
+                self._state["mode_label"] = mode.name.replace("_", " ").title()
+        except ValueError:
+            self.get_logger().warning(f"Ignoring invalid /mode value: {msg.data}")
 
     # ── HTTP server ───────────────────────────────────────────────────────────
 

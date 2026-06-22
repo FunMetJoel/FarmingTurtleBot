@@ -403,6 +403,10 @@
                     >
                 </div>
             </div>
+            <div class="card">
+                <div class="card-label">System Mode</div>
+                <div class="card-value" id="modeVal">Unknown</div>
+            </div>
         </aside>
 
         <!-- Chart (row 3, col 1) -->
@@ -454,6 +458,10 @@
                     .then((r) => r.json())
                     .then((s) => {
                         setStatus("connected", "Connected");
+
+                        if (s.mode_label !== null && s.mode_label !== undefined) {
+                            document.getElementById("modeVal").textContent = s.mode_label;
+                        }
 
                         if (s.map)          { mapMsg      = s.map; }
                         if (s.humidity_map) { humidityMsg = s.humidity_map; }
