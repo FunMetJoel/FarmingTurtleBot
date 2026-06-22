@@ -4,12 +4,27 @@ We are *Team 9*. This is a repository for keeping our code for the
 CBL Autonomous Systems Twinning course.
 
 **Authors (the active team members):**
-  - Joël Rodenbach, @FunMetJoel  
-  - Samu Németh, @samunemeth  
-  - Ignacy Świderski, @igifigi  
-  - Can Erturk, @ErturkCan  
-  - Marnix van den Bosch, @Marnix900
-  - Frederic Cahn von Seelen, @frederic-cvs
+  - Joël Rodenbach, 2324784
+    - GitHub: @FunMetJoel
+    - Git: FunMetJoel <machinebouwclub@gmail.com>
+  - Samu Németh, 2252449
+    - GitHub: @samunemeth
+    - Git: Samu Nemeth <nemeth.samu.0202@gmail.com>
+    - Git: Samu Németh <nemeth.samu.0202@gmail.com>
+  - Ignacy Świderski, ???????
+    - GitHub: @igifigi
+    - Git: Ignacy Świderski <ignacyswiderski@wp.pl>
+    - Git: Ignacy Świderski <44808028+Igifigi@users.noreply.github.com>
+  - Can Erturk, ???????
+    - GitHub: @ErturkCan
+    - Git: Can Erturk <63166629+ErturkCan@users.noreply.github.com>
+  - Marnix van den Bosch, 2293781
+    - GitHub: @Marnix900
+    - Git: marnix900 <marnixvdbosch05@gmail.com>
+    - Git: marnix900 <61279855+marnix900@users.noreply.github.com>
+  - Frederic Cahn von Seelen, 2305003
+    - GitHub: @frederic-cvs
+    - Git: frederic-cvs <entire.twice-0v@icloud.com>
 
 **Lab Laptop Credentials:**
   - Username: `team09`
