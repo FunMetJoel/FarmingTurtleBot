@@ -3,13 +3,17 @@
 We are *Team 9*. This is a repository for keeping our code for the
 CBL Autonomous Systems Twinning course.
 
-Authors (the active team members):
+**Authors (the active team members):**
   - Joël Rodenbach, @FunMetJoel  
   - Samu Németh, @samunemeth  
   - Ignacy Świderski, @igifigi  
   - Can Erturk, @ErturkCan  
   - Marnix van den Bosch, @Marnix900
   - Frederic Cahn von Seelen, @frederic-cvs
+
+**Lab Laptop Credentials:**
+  - Username: `team09`
+  - Password: `drinkandsmile5`
 
 Please keep commit messages concise and all lower case. Add extra detail to the
 description if needed.
