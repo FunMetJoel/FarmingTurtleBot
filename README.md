@@ -11,11 +11,11 @@ CBL Autonomous Systems Twinning course.
     - GitHub: @samunemeth
     - Git: Samu Nemeth <nemeth.samu.0202@gmail.com>
     - Git: Samu Németh <nemeth.samu.0202@gmail.com>
-  - Ignacy Świderski, ???????
+  - Ignacy Świderski, 2272563
     - GitHub: @igifigi
     - Git: Ignacy Świderski <ignacyswiderski@wp.pl>
     - Git: Ignacy Świderski <44808028+Igifigi@users.noreply.github.com>
-  - Can Erturk, ???????
+  - Can Erturk, 2258854
     - GitHub: @ErturkCan
     - Git: Can Erturk <63166629+ErturkCan@users.noreply.github.com>
   - Marnix van den Bosch, 2293781
