@@ -18,12 +18,10 @@ For instructions on demonstrating state synchronisation consult the
 [README of the `tb3_state_dt` package](./src/tb3_state_dt/README.md).
 
 
-# Running in docker container (with simulated TurtleBot)
+## Running the Docker Container (Simulated TurtleBot)
 
-To run the code without having access to the lab laptop or robot.
-
-
-## Running the Docker Container
+To run the code without having access to the lab laptop or real robot,
+running inside the docker container on windows using WSL is possible.
 
 1. Open WSL
 2. Start up docker desktop, or another way to run docker
@@ -73,7 +71,10 @@ To run the code without having access to the lab laptop or robot.
    ```
 
 
-## Running on Lab Laptop (With the Real TurtleBot)
+## Running on Lab Laptop (Real TurtleBot)
+
+In the lab environment, the code should be run without the docker container
+and with the real robot.
 
 1. SSH in to the TurtleBot:
    Get the IP address thats on the TurtleBot
